@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Map of the game
+const int MAP_WIDTH = 16;
+const int MAP_HEIGHT = 8;
+
+//Map Definition
+//    0 -&gt; Path (red cells) 
+//    1 -&gt; Turret positions (green cells)
+//    2 -&gt; Main Tower (blue cell)
+const int MAP[MAP_HEIGHT][MAP_WIDTH] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 2},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1}
+};
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Main Tower
+const int MAIN_TOWER_X = 15;
+const int MAIN_TOWER_Y = 4;
+const int MAIN_TOWER_LIFE = 10;
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Enemy
+typedef int[0,1] EnemyType; //0-&gt;Circle, 1-&gt;Square
+const EnemyType CIRCLE = 0;
+const EnemyType SQUARE = 1;
+
+const int CIRCLE_SPEED = 1;
+const int CIRCLE_HEALTH = 10;
+const int CIRCLE_DAMAGE = 2;
+const int SQUARE_SPEED = 3;
+const int SQUARE_HEALTH = 20;
+const int SQUARE_DAMAGE = 4;
+
+const int CIRCLE_SPAWN_TIME = 2;
+const int SQUARE_SPAWN_TIME = 3;
+
+typedef struct {
+    bool active;
+    EnemyType type;
+    int x;
+    int y;
+    int health;
+    int spawnTime;  //Time when enemy spawned (for targeting priority)
+} Enemy;
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Turret
+typedef int[0,2] TurretType; //0-&gt;Basic, 1-&gt;Cannon, 2-&gt;Sniper
+const TurretType BASIC = 0;
+const TurretType CANNON = 1;
+const TurretType SNIPER = 2;
+
+const int BASIC_RANGE = 2;
+const int BASIC_FIRE_SPEED = 2;
+const int BASIC_DAMAGE = 2;
+const int CANNON_RANGE = 1;
+const int CANNON_FIRE_SPEED = 7;
+const int CANNON_DAMAGE = 5;
+const int SNIPER_RANGE = 4;
+const int SNIPER_FIRE_SPEED = 20;
+const int SNIPER_DAMAGE = 8;
+
+typedef struct {
+    bool placed;
+    TurretType type;
+    int x;
+    int y;
+    int targetEnemy; //Index of the enemy being targeted, -1 if none
+} Turret;
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Game State Constants
+const int SPAWN_X = 0;
+const int SPAWN_Y = 0;
+
+//Game State Variables
+int mainTowerLife = MAIN_TOWER_LIFE;
+bool gameOver = false;
+bool gameWon = false;
+
+//Enemy Wave Parameters (VANILLA VERSION)
+const int NUM_CIRCLES = 3;
+const int NUM_SQUARES = 3;
+const int MAX_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
+
+Enemy enemies[MAX_ENEMIES];
+Turret turrets[10]; // Max 10 turrets for simplicity, can be adjusted
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Helper Functions
+
+//Calculate Manhattan distance between two points
+int distance(int x1, int y1, int x2, int y2) {
+    return abs(x1 - x2) + abs(y1 - y2);
+}
+
+//Check if an enemy is in a turret's range
+bool inRange(int turretX, int turretY, int range, int enemyX, int enemyY) {
+    return distance(turretX, turretY, enemyX, enemyY) &lt;= range;
+}
+
+//Find the best target for a turret
+int findTarget(int turretIndex) {
+    int tx = turrets[turretIndex].x;
+    int ty = turrets[turretIndex].y;
+    int range;
+    int bestTarget = -1;
+    int minDistance = MAP_WIDTH + MAP_HEIGHT; //Initialize with a large value
+    int earliestSpawn = -1; //For enemies at same distance
+    int i;
+    
+    //Get turret range based on type
+    if (turrets[turretIndex].type == BASIC) range = BASIC_RANGE;
+    else if (turrets[turretIndex].type == CANNON) range = CANNON_RANGE;
+    else range = SNIPER_RANGE;
+    
+    //First priority: Squares in range
+    for (i = 0; i &lt; MAX_ENEMIES; i++) {
+        if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; enemies[i].type == SQUARE) {
+            if (inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
+                int d = distance(tx, ty, enemies[i].x, enemies[i].y);
+                if (d &lt; minDistance || (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; earliestSpawn)) {
+                    minDistance = d;
+                    earliestSpawn = enemies[i].spawnTime;
+                    bestTarget = i;
+                }
+            }
+        }
+    }
+    
+    //If no Squares found, look for Circles
+    if (bestTarget == -1) {
+        minDistance = MAP_WIDTH + MAP_HEIGHT;
+        earliestSpawn = -1;
+        for (i = 0; i &lt; MAX_ENEMIES; i++) {
+            if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; enemies[i].type == CIRCLE) {
+                if (inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
+                    int d = distance(tx, ty, enemies[i].x, enemies[i].y);
+                    if (d &lt; minDistance || (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; earliestSpawn)) {
+                        minDistance = d;
+                        earliestSpawn = enemies[i].spawnTime;
+                        bestTarget = i;
+                    }
+                }
+            }
+        }
+    }
+    
+    return bestTarget;
+}
+
+
+//Apply damage to an enemy
+void applyDamage(int enemyIndex, int damage) {
+    enemies[enemyIndex].health -= damage;
+}
+
+//Check if a cell is a valid move for an enemy
+bool isValidMove(int x, int y) {
+    if (x &lt; 0 || x &gt;= MAP_WIDTH || y &lt; 0 || y &gt;= MAP_HEIGHT) return false;
+    return MAP[y][x] == 0 || MAP[y][x] == 2; // Path or Main Tower
+}
+
+//Check if a cell is the Main Tower
+bool isMainTower(int x, int y) {
+    return x == MAIN_TOWER_X &amp;&amp; y == MAIN_TOWER_Y;
+}
+
+//Place turret
+bool placeTurret(TurretType type, int x, int y) {
+    int i;
+
+    //Check if position is valid for turret placement
+    if (x &lt; 0 || x &gt;= MAP_WIDTH || y &lt; 0 || y &gt;= MAP_HEIGHT) return false;
+    if (MAP[y][x] != 1) return false; // Not a turret position
+    
+    //Check if a turret already exists at the position
+    for (i = 0; i &lt; 10; i++) {
+        if (turrets[i].placed &amp;&amp; turrets[i].x == x &amp;&amp; turrets[i].y == y) {
+            return false;
+        }
+    }
+    
+    //Find an empty slot for turret
+    for (i = 0; i &lt; 10; i++) {
+        if (!turrets[i].placed) {
+            turrets[i].placed = true;
+            turrets[i].type = type;
+            turrets[i].x = x;
+            turrets[i].y = y;
+            turrets[i].targetEnemy = -1;
+            return true;
+        }
+    }
+    
+    return false; //No slot available
+}
+
+</declaration>
+	<template>
+		<name x="5" y="5">Template</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="0" y="0">
+		</location>
+		<init ref="id0"/>
+	</template>
+	<system>// Place template instantiations here.
+Process = Template();
+// List one or more processes to be composed into a system.
+system Process;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
