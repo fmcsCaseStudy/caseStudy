@@ -3,46 +3,111 @@
 <nta>
 	<declaration>// Place global declarations here.
 
-// position(x,y)
+// Var related to Map setting
 const int POSITION = 2;
-const int path1[11][POSITION] = {
-    {0,0},{0,1},{0,2},{0,3},{0,4},{1,4},{2,4},{3,4},{4,4},{5,4},{6,4}};
+const int START[POSITION] = {0,0};
+const int END[POSITION] = {15,4};
 
+const int PATH_1_LEN = 12;
+const int PATH_1[PATH_1_LEN][POSITION] = {
+    {0,0},{0,1},{0,2},{0,3},{0,4},{1,4},{2,4},{3,4},{4,4},{5,4},{6,4},{7,4}
+};
 
+const int PATH_1_1_LEN = 6;
+const int PATH_1_1[PATH_1_1_LEN][POSITION] = {
+    {7,5},{7,6},{7,7},{8,7},{9,7},{10,7}
+};
 
-const int decistion1[POSITION] = 
-    {7,4};
+const int PATH_1_1_1_LEN = 8;
+const int PATH_1_1_1[PATH_1_1_1_LEN][POSITION] = {
+    {11,7},{12,7},{13,7},{14,7},{15,7},{15,6},{15,5},{15,4}
+};
 
-const int PATH2 = 1;
-const int PATH3 = 1;
-const int path2[PATH2][POSITION] = {
-    {7,5}};
-const int path3[PATH3][POSITION] = {
-    {7,3}};
-    </declaration>
+const int PATH_1_1_2_LEN = 8;
+const int PATH_1_1_2[PATH_1_1_2_LEN][POSITION] = {
+    {10,6},{10,5},{10,4},{11,4},{12,4},{13,4},{14,4},{15,4}
+};
+
+const int PATH_1_2_LEN = 14;
+const int PATH_1_2[PATH_1_2_LEN][POSITION] = {
+    {7,3},{7,2},{7,1},{8,1},{9,1},{10,1},{11,1},{12,1},{13,1},{14,1},{15,1},{15,2},{15,3},{15,4}
+};
+
+// var related to monster, 
+typedef int[0,1] EnemyType; //0-&amp;gt;Circle, 1-&amp;gt;Square
+const EnemyType CIRCLE = 0;
+const EnemyType SQUARE = 1;
+const int E_DATA[2][4] = {
+    {1,10,2,2},{3,20,4,3}
+};
+// speed, health, damage, respwntime
+
+//Constants related to Turret
+typedef int[0,2] TurretType; //0-&amp;gt;Basic, 1-&amp;gt;Cannon, 2-&amp;gt;Sniper
+const TurretType BASIC = 0;
+const TurretType CANNON = 1;
+const TurretType SNIPER = 2;
+
+const int T_DATA[3][3] = {
+    {2,2,2},{1,7,5},{4,20,8}
+};
+//range, fire speed, damage
+
+// var related to game setting
+const int ENEMY_NUMBER = 6;
+
+//global var to be send
+int position[ENEMY_NUMBER][POSITION] = {
+    {-1,-1},{-1,-1},{-1,-1},
+}
+// channel used
+chan 
+
+</declaration>
 	<template>
-		<name x="5" y="5">Template</name>
-		<declaration>// Place local declarations here.
+		<name x="5" y="5">Enemy</name>
+		<parameter>int interval, EnemyType type</parameter>
+		<declaration>bool alive = false;
+EnemyType t;
+int position;
+int spwan;
 
-const int decistion1[POSITION] = 
-    {7,4};
+void Path_1() {
+    t = type;
+    alive = true;
+    position = 0;
+    spwan = interval;
+}
 
-const int PATH2 = 1;
-const int PATH3 = 1;
-const int path2[PATH2][POSITION] = {
-    {7,5}};
-const int path3[PATH3][POSITION] = {
-    {7,3}};
-    </declaration>
-		<location id="id0" x="0" y="0">
+
+</declaration>
+		<location id="id0" x="-425" y="-93">
 		</location>
-		<init ref="id0"/>
+		<location id="id1" x="-425" y="-93">
+			<name x="-435" y="-127">Created</name>
+		</location>
+		<location id="id2" x="-127" y="-93">
+			<name x="-137" y="-127">PATH_1</name>
+		</location>
+		<init ref="id1"/>
+		<transition id="id3">
+			<source ref="id1"/>
+			<target ref="id2"/>
+		</transition>
+		<transition id="id4">
+			<source ref="id0"/>
+			<target ref="id1"/>
+		</transition>
 	</template>
-	<system>// Place template instantiations here.
-Process = Template();
-// List one or more processes to be composed into a system.
-system Process;
-</system>
+	<template>
+		<name>Tower</name>
+		<location id="id5" x="0" y="0">
+		</location>
+		<init ref="id5"/>
+	</template>
+	<system>monster1 = Enemy(2,1);
+
+system monster1;</system>
 	<queries>
 		<query>
 			<formula/>
