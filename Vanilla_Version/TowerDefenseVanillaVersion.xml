@@ -7,9 +7,10 @@ const int MAP_WIDTH = 16;
 const int MAP_HEIGHT = 8;
 
 //Map Definition
-//    0 -&gt; Path (red cells) 
-//    1 -&gt; Turret positions (green cells)
-//    2 -&gt; Main Tower (blue cell)
+//    0 -&gt; Empty Cell  
+//    1 -&gt; Path (red cells)
+//    2 -&gt; Turret positions (green cells)
+//    3 -&gt; Main Tower (blue cell)
 const int MAP[MAP_HEIGHT][MAP_WIDTH] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -212,12 +213,177 @@ bool placeTurret(TurretType type, int x, int y) {
 
 </declaration>
 	<template>
-		<name x="5" y="5">Template</name>
+		<name x="5" y="5">MainTower</name>
 		<declaration>// Place local declarations here.
 </declaration>
-		<location id="id0" x="0" y="0">
+		<location id="id0" x="-204" y="-34">
+			<name x="-221" y="-68">Alive</name>
+		</location>
+		<location id="id1" x="-102" y="-34">
+			<name x="-110" y="-68">Hit</name>
+		</location>
+		<location id="id2" x="0" y="-34">
+			<name x="-8" y="-68">Dead</name>
 		</location>
 		<init ref="id0"/>
+		<transition id="id3">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<nail x="-153" y="0"/>
+		</transition>
+		<transition id="id4">
+			<source ref="id1"/>
+			<target ref="id2"/>
+		</transition>
+		<transition id="id5">
+			<source ref="id0"/>
+			<target ref="id1"/>
+		</transition>
+	</template>
+	<template>
+		<name>GameController</name>
+		<location id="id6" x="-544" y="0">
+			<name x="-561" y="17">Start</name>
+		</location>
+		<location id="id7" x="-136" y="-68">
+			<name x="-146" y="-102">Win</name>
+		</location>
+		<location id="id8" x="-136" y="68">
+			<name x="-153" y="85">Lost</name>
+		</location>
+		<location id="id9" x="-272" y="0">
+			<name x="-238" y="-8">Spawn_Enemies</name>
+		</location>
+		<location id="id10" x="-408" y="0">
+			<name x="-450" y="-34">Place_Turret</name>
+		</location>
+		<init ref="id6"/>
+		<transition id="id11">
+			<source ref="id10"/>
+			<target ref="id9"/>
+		</transition>
+		<transition id="id12">
+			<source ref="id6"/>
+			<target ref="id10"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id9"/>
+			<target ref="id8"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id9"/>
+			<target ref="id7"/>
+		</transition>
+	</template>
+	<template>
+		<name>Turret</name>
+		<location id="id15" x="-340" y="0">
+			<name x="-374" y="-34">Not_Placed</name>
+		</location>
+		<location id="id16" x="-204" y="0">
+			<name x="-221" y="-34">Idle</name>
+		</location>
+		<location id="id17" x="-68" y="0">
+			<name x="-93" y="-34">Firing</name>
+		</location>
+		<location id="id18" x="-136" y="68">
+			<name x="-161" y="85">Reload</name>
+		</location>
+		<init ref="id15"/>
+		<transition id="id19">
+			<source ref="id15"/>
+			<target ref="id16"/>
+		</transition>
+		<transition id="id20">
+			<source ref="id18"/>
+			<target ref="id16"/>
+		</transition>
+		<transition id="id21">
+			<source ref="id18"/>
+			<target ref="id17"/>
+			<nail x="-68" y="68"/>
+		</transition>
+		<transition id="id22">
+			<source ref="id17"/>
+			<target ref="id18"/>
+		</transition>
+		<transition id="id23">
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="comments" x="-221" y="-59">Committed + Check Range</label>
+		</transition>
+	</template>
+	<template>
+		<name>Enemy</name>
+		<location id="id24" x="-340" y="0">
+			<name x="-382" y="-34">Not_Spawned</name>
+		</location>
+		<location id="id25" x="-204" y="0">
+			<name x="-255" y="-34">Waiting</name>
+		</location>
+		<location id="id26" x="-68" y="0">
+			<name x="-59" y="-25">Moving</name>
+		</location>
+		<location id="id27" x="68" y="0">
+			<name x="34" y="8">Attacking</name>
+		</location>
+		<location id="id28" x="-136" y="-102">
+			<name x="-146" y="-136">Dead</name>
+		</location>
+		<location id="id29" x="170" y="0">
+			<name x="136" y="-34">Left_Map</name>
+		</location>
+		<location id="id30" x="-136" y="102">
+			<name x="-144" y="119">Hit</name>
+		</location>
+		<init ref="id24"/>
+		<transition id="id31">
+			<source ref="id25"/>
+			<target ref="id28"/>
+		</transition>
+		<transition id="id32">
+			<source ref="id30"/>
+			<target ref="id26"/>
+			<nail x="-68" y="102"/>
+		</transition>
+		<transition id="id33">
+			<source ref="id26"/>
+			<target ref="id30"/>
+		</transition>
+		<transition id="id34">
+			<source ref="id30"/>
+			<target ref="id25"/>
+			<nail x="-204" y="102"/>
+		</transition>
+		<transition id="id35">
+			<source ref="id25"/>
+			<target ref="id30"/>
+		</transition>
+		<transition id="id36">
+			<source ref="id26"/>
+			<target ref="id28"/>
+		</transition>
+		<transition id="id37">
+			<source ref="id27"/>
+			<target ref="id29"/>
+		</transition>
+		<transition id="id38">
+			<source ref="id26"/>
+			<target ref="id25"/>
+			<nail x="-136" y="34"/>
+		</transition>
+		<transition id="id39">
+			<source ref="id26"/>
+			<target ref="id27"/>
+		</transition>
+		<transition id="id40">
+			<source ref="id25"/>
+			<target ref="id26"/>
+		</transition>
+		<transition id="id41">
+			<source ref="id24"/>
+			<target ref="id25"/>
+		</transition>
 	</template>
 	<system>// Place template instantiations here.
 Process = Template();
