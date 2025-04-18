@@ -214,8 +214,13 @@ bool placeTurret(TurretType type, int x, int y) {
 </declaration>
 	<template>
 		<name x="5" y="5">MainTower</name>
-		<declaration>// Place local declarations here.
-</declaration>
+		<declaration>// Local declarations for MainTower template
+clock hitTimer;        //Track recovery time after getting hit
+int damageReceived;    //Ttrack damage from enemies
+bool isHit = false;    //Flag to track hit state
+
+// Constants
+const int RECOVERY_TIME = 5; //Time needed to recover after being hit</declaration>
 		<location id="id0" x="-204" y="-34">
 			<name x="-221" y="-68">Alive</name>
 		</location>
