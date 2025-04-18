@@ -214,70 +214,84 @@ bool placeTurret(TurretType type, int x, int y) {
 </declaration>
 	<template>
 		<name x="5" y="5">MainTower</name>
-		<declaration>// Local declarations for MainTower template
-clock hitTimer;        //Track recovery time after getting hit
-int damageReceived;    //Ttrack damage from enemies
-bool isHit = false;    //Flag to track hit state
-
-// Constants
-const int RECOVERY_TIME = 5; //Time needed to recover after being hit</declaration>
-		<location id="id0" x="-204" y="-34">
-			<name x="-221" y="-68">Alive</name>
+		<declaration>int damageReceived = 0; //Track incoming damage from enemies</declaration>
+		<location id="id0" x="-408" y="-34">
+			<name x="-467" y="-51">Alive</name>
 		</location>
 		<location id="id1" x="-102" y="-34">
 			<name x="-110" y="-68">Hit</name>
+			<committed/>
 		</location>
-		<location id="id2" x="0" y="-34">
-			<name x="-8" y="-68">Dead</name>
+		<location id="id2" x="101" y="-34">
+			<name x="127" y="-51">Dead</name>
 		</location>
 		<init ref="id0"/>
 		<transition id="id3">
 			<source ref="id1"/>
 			<target ref="id0"/>
-			<nail x="-153" y="0"/>
+			<label kind="guard" x="-314" y="34">mainTowerLife&gt;0</label>
+			<label kind="assignment" x="-323" y="51">damageReceived=0</label>
+			<nail x="-255" y="34"/>
 		</transition>
 		<transition id="id4">
 			<source ref="id1"/>
 			<target ref="id2"/>
+			<label kind="guard" x="-59" y="-76">mainTowerLife&lt;=0</label>
+			<label kind="assignment" x="-51" y="-59">gameOver=true</label>
 		</transition>
 		<transition id="id5">
 			<source ref="id0"/>
 			<target ref="id1"/>
+			<label kind="guard" x="-323" y="-76">damageReceived&gt;0</label>
+			<label kind="assignment" x="-374" y="-59">mainTowerLife-=damageReceived</label>
 		</transition>
 	</template>
 	<template>
 		<name>GameController</name>
-		<location id="id6" x="-544" y="0">
-			<name x="-561" y="17">Start</name>
+		<declaration>int enemiesSpawned = 0;      //Track the number of enemies that have been spawned
+int enemiesDefeated = 0;     //Track the number enemies that have been defeated
+int turretsPlaced = 0;       //Track the number of turrets that have been placed
+clock gameTimer;             //Track game time
+bool readyToSpawn = false;   //Flag to control enemy spawning</declaration>
+		<location id="id6" x="-782" y="0">
+			<name x="-799" y="17">Start</name>
+			<committed/>
 		</location>
-		<location id="id7" x="-136" y="-68">
-			<name x="-146" y="-102">Win</name>
+		<location id="id7" x="-102" y="-93">
+			<name x="-112" y="-127">Win</name>
 		</location>
-		<location id="id8" x="-136" y="68">
-			<name x="-153" y="85">Lost</name>
+		<location id="id8" x="-102" y="102">
+			<name x="-119" y="119">Lost</name>
 		</location>
-		<location id="id9" x="-272" y="0">
-			<name x="-238" y="-8">Spawn_Enemies</name>
+		<location id="id9" x="-306" y="0">
+			<name x="-382" y="-34">Spawn_Enemies</name>
 		</location>
-		<location id="id10" x="-408" y="0">
-			<name x="-450" y="-34">Place_Turret</name>
+		<location id="id10" x="-578" y="0">
+			<name x="-620" y="-34">Place_Turret</name>
 		</location>
 		<init ref="id6"/>
 		<transition id="id11">
 			<source ref="id10"/>
 			<target ref="id9"/>
+			<label kind="guard" x="-510" y="0">turretsPlaced&gt;0</label>
+			<label kind="assignment" x="-552" y="17">readyToSpawn=true,gameTimer=0</label>
 		</transition>
 		<transition id="id12">
 			<source ref="id6"/>
 			<target ref="id10"/>
+			<label kind="guard" x="-765" y="-25">turretsPlaced&lt;10</label>
 		</transition>
 		<transition id="id13">
 			<source ref="id9"/>
 			<target ref="id8"/>
+			<label kind="guard" x="-178" y="34">mainTowerLife&lt;=0</label>
+			<label kind="assignment" x="-161" y="51">gameOver=true</label>
 		</transition>
 		<transition id="id14">
 			<source ref="id9"/>
 			<target ref="id7"/>
+			<label kind="guard" x="-187" y="-51">enemiesDefeated&gt;=MAX_ENEMIES &amp;&amp; mainTowerLife&gt;0</label>
+			<label kind="assignment" x="-68" y="-34">gameWon=true</label>
 		</transition>
 	</template>
 	<template>
