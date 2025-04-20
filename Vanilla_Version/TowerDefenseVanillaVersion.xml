@@ -279,7 +279,7 @@ bool readyToSpawn = false;   //Flag to control enemy spawning</declaration>
 		<transition id="id12">
 			<source ref="id6"/>
 			<target ref="id10"/>
-			<label kind="guard" x="-765" y="-25">turretsPlaced&lt;10</label>
+			<label kind="guard" x="-756" y="-17">turretsPlaced&lt;10</label>
 		</transition>
 		<transition id="id13">
 			<source ref="id9"/>
@@ -296,112 +296,192 @@ bool readyToSpawn = false;   //Flag to control enemy spawning</declaration>
 	</template>
 	<template>
 		<name>Turret</name>
-		<location id="id15" x="-340" y="0">
-			<name x="-374" y="-34">Not_Placed</name>
+		<declaration>int turretId;            //Unique ID for the turret instance
+int fireRate;            //How fast turret instance can fire
+int damage;              //Damage dealt by turret instance
+int range;               //Attack range of turret instance
+clock fireTimer;         //Timer for tracking reload time
+int targetEnemy = -1;    //ID of the enemy being targeted(-1 means no target)
+
+//Set turret instance stats based on type of turret
+void setTurretStats() {
+    if (turrets[turretId].type == BASIC) {
+        fireRate = BASIC_FIRE_SPEED;
+        damage = BASIC_DAMAGE;
+        range = BASIC_RANGE;
+    } else if (turrets[turretId].type == CANNON) {
+        fireRate = CANNON_FIRE_SPEED;
+        damage = CANNON_DAMAGE;
+        range = CANNON_RANGE;
+    } else {
+        fireRate = SNIPER_FIRE_SPEED;
+        damage = SNIPER_DAMAGE;
+        range = SNIPER_RANGE;
+    }
+}</declaration>
+		<location id="id15" x="-680" y="0">
+			<name x="-765" y="-34">Not_Placed</name>
+			<committed/>
 		</location>
-		<location id="id16" x="-204" y="0">
-			<name x="-221" y="-34">Idle</name>
+		<location id="id16" x="-408" y="0">
+			<name x="-425" y="-34">Idle</name>
 		</location>
-		<location id="id17" x="-68" y="0">
-			<name x="-93" y="-34">Firing</name>
+		<location id="id17" x="34" y="0">
+			<name x="9" y="-34">Firing</name>
+			<committed/>
 		</location>
-		<location id="id18" x="-136" y="68">
-			<name x="-161" y="85">Reload</name>
+		<location id="id18" x="-187" y="136">
+			<name x="-238" y="153">Reload</name>
 		</location>
 		<init ref="id15"/>
 		<transition id="id19">
 			<source ref="id15"/>
 			<target ref="id16"/>
+			<label kind="guard" x="-637" y="-42">turrets[turretId].placed</label>
+			<label kind="assignment" x="-612" y="-25">setTurretStats()</label>
 		</transition>
 		<transition id="id20">
 			<source ref="id18"/>
 			<target ref="id16"/>
+			<label kind="guard" x="-467" y="51">fireTimer&gt;=fireRate</label>
+			<label kind="assignment" x="-450" y="68">targetEnemy=-1</label>
 		</transition>
 		<transition id="id21">
 			<source ref="id18"/>
 			<target ref="id17"/>
-			<nail x="-68" y="68"/>
+			<label kind="guard" x="-161" y="136">fireTimer&gt;=fireRate,targetEnemy=findTarget(turretId),targetEnemy&gt;=0</label>
+			<label kind="assignment" x="42" y="153">fireTimer=0</label>
+			<nail x="34" y="136"/>
 		</transition>
 		<transition id="id22">
 			<source ref="id17"/>
 			<target ref="id18"/>
+			<label kind="assignment" x="-51" y="51">applyDamage(targetEnemy,damage),fireTimer=0</label>
 		</transition>
 		<transition id="id23">
 			<source ref="id16"/>
 			<target ref="id17"/>
-			<label kind="comments" x="-221" y="-59">Committed + Check Range</label>
+			<label kind="guard" x="-374" y="-25">targetEnemy=findTarget(turretId),targetEnemy&gt;=0</label>
+			<label kind="comments" x="-289" y="-51">Committed + Check Range</label>
 		</transition>
 	</template>
 	<template>
 		<name>Enemy</name>
-		<location id="id24" x="-340" y="0">
-			<name x="-382" y="-34">Not_Spawned</name>
+		<declaration>int enemyId;             //Unique ID for the enemy instance
+int health;              //Current health of the enemy instance
+int speed;               //Movement speed of the enemy instance
+int damage;              //Damage enemy instance deals to the tower
+clock moveTimer;         //Timer for controlling movement speed
+bool canMove = false;    //Flag to control movement
+int currentX;            //Current X position
+int currentY;            //Current Y position
+
+//Initialize enemy instance based on its type
+void initEnemy() {
+    currentX = SPAWN_X;
+    currentY = SPAWN_Y;
+    
+    if (enemies[enemyId].type == CIRCLE) {
+        health = CIRCLE_HEALTH;
+        speed = CIRCLE_SPEED;
+        damage = CIRCLE_DAMAGE;
+    } else {
+        health = SQUARE_HEALTH;
+        speed = SQUARE_SPEED;
+        damage = SQUARE_DAMAGE;
+    }
+    
+    //Check if it's possible to move
+    canMove = isValidMove(currentX + 1, currentY) || isValidMove(currentX, currentY + 1) || isValidMove(currentX - 1, currentY) || isValidMove(currentX, currentY - 1);
+}</declaration>
+		<location id="id24" x="-952" y="0">
+			<name x="-1028" y="-34">Not_Spawned</name>
+			<committed/>
 		</location>
-		<location id="id25" x="-204" y="0">
-			<name x="-255" y="-34">Waiting</name>
+		<location id="id25" x="-646" y="0">
+			<name x="-697" y="-34">Waiting</name>
 		</location>
-		<location id="id26" x="-68" y="0">
-			<name x="-59" y="-25">Moving</name>
+		<location id="id26" x="-374" y="0">
+			<name x="-382" y="-51">Moving</name>
 		</location>
-		<location id="id27" x="68" y="0">
-			<name x="34" y="8">Attacking</name>
+		<location id="id27" x="-68" y="0">
+			<name x="-102" y="8">Attacking</name>
 		</location>
-		<location id="id28" x="-136" y="-102">
-			<name x="-146" y="-136">Dead</name>
+		<location id="id28" x="-510" y="-170">
+			<name x="-527" y="-204">Dead</name>
+			<committed/>
 		</location>
-		<location id="id29" x="170" y="0">
-			<name x="136" y="-34">Left_Map</name>
+		<location id="id29" x="442" y="0">
+			<name x="442" y="-34">Left_Map</name>
+			<committed/>
 		</location>
-		<location id="id30" x="-136" y="102">
-			<name x="-144" y="119">Hit</name>
+		<location id="id30" x="-510" y="204">
+			<name x="-518" y="221">Hit</name>
+			<committed/>
 		</location>
 		<init ref="id24"/>
 		<transition id="id31">
 			<source ref="id25"/>
 			<target ref="id28"/>
+			<label kind="guard" x="-799" y="-161">health&lt;=0</label>
+			<label kind="assignment" x="-935" y="-144">enemies[enemyId].active=false,enemiesDefeated++</label>
 		</transition>
 		<transition id="id32">
 			<source ref="id30"/>
 			<target ref="id26"/>
-			<nail x="-68" y="102"/>
+			<label kind="guard" x="-365" y="187">health&gt;0&amp;&amp;canMove</label>
+			<label kind="assignment" x="-340" y="204">moveTimer=0</label>
+			<nail x="-374" y="204"/>
 		</transition>
 		<transition id="id33">
 			<source ref="id26"/>
 			<target ref="id30"/>
+			<label kind="comments" x="-442" y="110">Add Synchronization Channel</label>
 		</transition>
 		<transition id="id34">
 			<source ref="id30"/>
 			<target ref="id25"/>
-			<nail x="-204" y="102"/>
+			<label kind="guard" x="-629" y="204">health&gt;0</label>
+			<nail x="-646" y="204"/>
 		</transition>
 		<transition id="id35">
 			<source ref="id25"/>
 			<target ref="id30"/>
+			<label kind="comments" x="-799" y="110">Add Synchronization Channel</label>
 		</transition>
 		<transition id="id36">
 			<source ref="id26"/>
 			<target ref="id28"/>
+			<label kind="guard" x="-297" y="-161">health&lt;=0</label>
+			<label kind="assignment" x="-442" y="-144">enemies[enemyId].active=false,enemiesDefeated++</label>
 		</transition>
 		<transition id="id37">
 			<source ref="id27"/>
 			<target ref="id29"/>
+			<label kind="assignment" x="-34" y="-25">mainTowerLife-=damage,damageReceived=damage,attackTower!</label>
 		</transition>
 		<transition id="id38">
 			<source ref="id26"/>
 			<target ref="id25"/>
-			<nail x="-136" y="34"/>
+			<label kind="guard" x="-544" y="34">!canMove</label>
+			<nail x="-510" y="34"/>
 		</transition>
 		<transition id="id39">
 			<source ref="id26"/>
 			<target ref="id27"/>
+			<label kind="guard" x="-340" y="-25">isMainTower(currentX,currentY)</label>
 		</transition>
 		<transition id="id40">
 			<source ref="id25"/>
 			<target ref="id26"/>
+			<label kind="guard" x="-603" y="-42">moveTimer&gt;=speed&amp;&amp;canMove</label>
+			<label kind="assignment" x="-552" y="-25">moveTimer=0</label>
 		</transition>
 		<transition id="id41">
 			<source ref="id24"/>
 			<target ref="id25"/>
+			<label kind="guard" x="-909" y="-42">enemies[enemyId].active</label>
+			<label kind="assignment" x="-909" y="-25">initEnemy(),moveTimer=0</label>
 		</transition>
 	</template>
 	<system>// Place template instantiations here.
