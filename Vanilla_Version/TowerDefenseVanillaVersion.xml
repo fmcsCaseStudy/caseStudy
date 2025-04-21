@@ -13,13 +13,59 @@ const int MAP_HEIGHT = 8;
 //    3 -&gt; Main Tower (blue cell)
 const int MAP[MAP_HEIGHT][MAP_WIDTH] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 2},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0},
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1}
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 0, 0, 0, 2, 1},
+    {0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 3},
+    {1, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 2, 1},
+    {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+};
+
+const int POSITION = 2;
+const int SPAWN_POS[POSITION] = {0,0};
+const int MAIN_TOWER_POS[POSITION] = {15,4};
+
+// const int PATH_1_LEN = 12;
+// const int PATH_1[PATH_1_LEN][POSITION] = {
+//     {0,0},{0,1},{0,2},{0,3},{0,4},{1,4},{2,4},{3,4},{4,4},{5,4},{6,4},{7,4}
+// };
+
+// const int PATH_1_1_LEN = 6;
+// const int PATH_1_1[PATH_1_1_LEN][POSITION] = {
+//     {7,5},{7,6},{7,7},{8,7},{9,7},{10,7}
+// };
+
+// const int PATH_1_1_1_LEN = 8;
+// const int PATH_1_1_1[PATH_1_1_1_LEN][POSITION] = {
+//     {11,7},{12,7},{13,7},{14,7},{15,7},{15,6},{15,5},{15,4}
+// };
+
+// const int PATH_1_1_2_LEN = 8;
+// const int PATH_1_1_2[PATH_1_1_2_LEN][POSITION] = {
+//     {10,6},{10,5},{10,4},{11,4},{12,4},{13,4},{14,4},{15,4}
+// };
+
+// const int PATH_1_2_LEN = 14;
+// const int PATH_1_2[PATH_1_2_LEN][POSITION] = {
+//     {7,3},{7,2},{7,1},{8,1},{9,1},{10,1},{11,1},{12,1},{13,1},{14,1},{15,1},{15,2},{15,3},{15,4}
+// };
+
+// DO NOT CHANGE THE PATHS ORDER!!!
+const int MAX_PATH_LEN = 14;
+const int PATHS_LEN[5] = { 12, 6, 14, 8, 8 };
+const int PATHS[5][MAX_PATH_LEN][POSITION] = {
+    { {  0, 0 }, {  0, 1 }, {  0, 2 }, {  0, 3 }, {  0, 4 }, {  1, 4 }, {  2,  4 }, {  3,  4 }, {  4,  4 }, {  5,  4 }, {  6,  4 }, {  7,  4 }, { -1, -1 }, { -1, -1 } },
+    { {  7, 5 }, {  7, 6 }, {  7, 7 }, {  8, 7 }, {  9, 7 }, { 10, 7 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+    { {  7, 3 }, {  7, 2 }, {  7, 1 }, {  8, 1 }, {  9, 1 }, { 10, 1 }, { 11,  1 }, { 12,  1 }, { 13,  1 }, { 14,  1 }, { 15,  1 }, { 15,  2 }, { 15,  3 }, { 15,  4 } },
+    { { 11, 7 }, { 12, 7 }, { 13, 7 }, { 14, 7 }, { 15, 7 }, { 15, 6 }, { 15,  5 }, { 15,  4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+    { { 10, 6 }, { 10, 5 }, { 10, 4 }, { 11, 4 }, { 12, 4 }, { 13, 4 }, { 14,  4 }, { 15,  4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } }
+};
+
+const int TURRETS_POS_LEN = 7;
+const int TURRETS_POS[TURRETS_POS_LEN][POSITION] = {
+    {2,3},{5,5},{8,2},{8,6},{11,5},{14,2},{14,6}
 };
 
 
@@ -115,57 +161,6 @@ int distance(int x1, int y1, int x2, int y2) {
 bool inRange(int turretX, int turretY, int range, int enemyX, int enemyY) {
     return distance(turretX, turretY, enemyX, enemyY) &lt;= range;
 }
-
-//Find the best target for a turret
-int findTarget(int turretIndex) {
-    int tx = turrets[turretIndex].x;
-    int ty = turrets[turretIndex].y;
-    int range;
-    int bestTarget = -1;
-    int minDistance = MAP_WIDTH + MAP_HEIGHT; //Initialize with a large value
-    int earliestSpawn = -1; //For enemies at same distance
-    int i;
-    
-    //Get turret range based on type
-    if (turrets[turretIndex].type == BASIC) range = BASIC_RANGE;
-    else if (turrets[turretIndex].type == CANNON) range = CANNON_RANGE;
-    else range = SNIPER_RANGE;
-    
-    //First priority: Squares in range
-    for (i = 0; i &lt; MAX_ENEMIES; i++) {
-        if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; enemies[i].type == SQUARE) {
-            if (inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
-                int d = distance(tx, ty, enemies[i].x, enemies[i].y);
-                if (d &lt; minDistance || (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; earliestSpawn)) {
-                    minDistance = d;
-                    earliestSpawn = enemies[i].spawnTime;
-                    bestTarget = i;
-                }
-            }
-        }
-    }
-    
-    //If no Squares found, look for Circles
-    if (bestTarget == -1) {
-        minDistance = MAP_WIDTH + MAP_HEIGHT;
-        earliestSpawn = -1;
-        for (i = 0; i &lt; MAX_ENEMIES; i++) {
-            if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; enemies[i].type == CIRCLE) {
-                if (inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
-                    int d = distance(tx, ty, enemies[i].x, enemies[i].y);
-                    if (d &lt; minDistance || (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; earliestSpawn)) {
-                        minDistance = d;
-                        earliestSpawn = enemies[i].spawnTime;
-                        bestTarget = i;
-                    }
-                }
-            }
-        }
-    }
-    
-    return bestTarget;
-}
-
 
 //Apply damage to an enemy
 void applyDamage(int enemyIndex, int damage) {
@@ -320,7 +315,33 @@ void setTurretStats() {
         damage = SNIPER_DAMAGE;
         range = SNIPER_RANGE;
     }
-}</declaration>
+}
+
+//Find the best target for a turret
+int findTarget(int turretIndex) {
+    int tx = turrets[turretIndex].x;
+    int ty = turrets[turretIndex].y;
+    int bestTarget = -1;
+    int minDistance = MAP_WIDTH + MAP_HEIGHT; //Initialize with a large value
+    int earliestSpawn = -1; //For enemies at same distance
+    
+    for (int i = 0; i &lt; MAX_ENEMIES; i++) {
+        if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
+            int d = distance(tx, ty, enemies[i].x, enemies[i].y);
+            if ( d &lt; minDistance || 
+                (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; earliestSpawn) || 
+                (d == minDistance &amp;&amp; enemies[i].spawnTime == earliestSpawn &amp;&amp; enemies[i].type == SQUARE)
+               ) {
+                minDistance = d;
+                earliestSpawn = enemies[i].spawnTime;
+                bestTarget = i;
+            }
+        }
+    }
+     
+    return bestTarget;
+}
+</declaration>
 		<location id="id15" x="-680" y="0">
 			<name x="-765" y="-34">Not_Placed</name>
 			<committed/>
@@ -375,14 +396,22 @@ int speed;               //Movement speed of the enemy instance
 int damage;              //Damage enemy instance deals to the tower
 clock moveTimer;         //Timer for controlling movement speed
 bool canMove = false;    //Flag to control movement
-int currentX;            //Current X position
-int currentY;            //Current Y position
+//int currentX;            //Current X position
+//int currentY;            //Current Y position
 int damageReceived;      //Damage Received by the enemy instance to the main tower
+
+int[0,4] currentPath;    //0 -&gt; PATH_1, 1 -&gt; PATH_1_1, 2 -&gt; PATH_1_2, 3 -&gt; PATH_1_1_1, 4 -&gt; PATH_1_1_2
+int posIdx;              //Position in the path
 
 //Initialize enemy instance based on its type
 void initEnemy() {
-    currentX = SPAWN_X;
-    currentY = SPAWN_Y;
+    currentPath = 0;
+    posIdx = 0;
+
+    //currentX = SPAWN_X;
+    //currentY = SPAWN_Y;
+    enemies[i].x = SPAWN_X;
+    enemies[i].y = SPAWN_Y;
     
     if (enemies[enemyId].type == CIRCLE) {
         health = CIRCLE_HEALTH;
@@ -396,6 +425,80 @@ void initEnemy() {
     
     //Check if it's possible to move
     canMove = isValidMove(currentX + 1, currentY) || isValidMove(currentX, currentY + 1) || isValidMove(currentX - 1, currentY) || isValidMove(currentX, currentY - 1);
+}
+
+//Move the enemy to the next cell selecting a random path when needed
+void move() {
+    if(posIdx &lt; PATHS_LEN[currrentPath] - 1){
+        posIdx++;
+    }
+    else{
+        select: i : int[0,1]
+        
+        currentPath = 2 * (currentPath + 1) - i; //Binary trees formula based on the order of the children
+        posIdx = 0;
+    }
+
+    //currentX = PATHS[currentPath][posIdx][0];
+    //currentY = PATHS[currentPath][posIdx][1];
+    enemies[i].x = PATHS[currentPath][posIdx][0];
+    enemies[i].y = PATHS[currentPath][posIdx][1];
+
+// if(currentPath == 0 &amp;&amp; posIdx &lt; PATH_1_LEN-1){
+//     posIdx++;
+//     currentX = PATH_1[posIdx][0];
+//     currentY = PATH_1[posIdx][1];
+// }
+// else if(currentPath == 1 &amp;&amp; posIdx &lt; PATH_1_1_LEN-1){
+//     posIdx++;
+//     currentX = PATH_1_1[posIdx][0];
+//     currentY = PATH_1_1[posIdx][1];
+// }
+// else if(currentPath == 2 &amp;&amp; posIdx &lt; PATH_1_1_1_LEN-1){
+//     posIdx++;
+//     currentX = PATH_1_1_1[posIdx][0];
+//     currentY = PATH_1_1_1[posIdx][1];
+// }
+// else if(currentPath == 3 &amp;&amp; posIdx &lt; PATH_1_1_2_LEN-1){
+//     posIdx++;
+//     currentX = PATH_1_1_2[posIdx][0];
+//     currentY = PATH_1_1_2[posIdx][1];
+// }
+// else if(currentPath == 4 &amp;&amp; posIdx &lt; PATH_1_2_LEN-1){
+//     posIdx++;
+//     currentX = PATH_1_2[posIdx][0];
+//     currentY = PATH_1_2[posIdx][1];
+// }
+// else{
+//     posIdx = 0;
+
+//     select: i : int[0,1]
+
+//     if(currentPath == 0){
+//         if(i == 0){
+//             currentPath = 1;
+//             currentX = PATH_1_1[posIdx][0];
+//             currentY = PATH_1_1[posIdx][1];
+//         }
+//         else{
+//             currentPath = 4;
+//             currentX = PATH_1_2[posIdx][0];
+//             currentY = PATH_1_2[posIdx][1];
+//         }
+//     }
+//     else if(currentPath == 1){
+//         if(i == 0){
+//             currentPath = 2;
+//             currentX = PATH_1_1_1[posIdx][0];
+//             currentY = PATH_1_1_1[posIdx][1];
+//         }
+//         else{
+//             currentPath = 3;
+//             currentX = PATH_1_1_2[posIdx][0];
+//             currentY = PATH_1_1_2[posIdx][1];
+//         }
+//     }
+// }
 }</declaration>
 		<location id="id24" x="-952" y="0">
 			<name x="-1028" y="-34">Not_Spawned</name>
