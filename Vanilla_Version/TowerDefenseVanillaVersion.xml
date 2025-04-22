@@ -20,7 +20,7 @@ const int MAP[MAP_HEIGHT][MAP_WIDTH] = {
     {1, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
     {1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 2, 1},
     {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 const int POSITION = 2;
@@ -324,8 +324,9 @@ int findTarget(int turretIndex) {
     int bestTarget = -1;
     int minDistance = MAP_WIDTH + MAP_HEIGHT; //Initialize with a large value
     int earliestSpawn = -1; //For enemies at same distance
-    
-    for (int i = 0; i &lt; MAX_ENEMIES; i++) {
+    int i;
+			
+    for (i = 0; i &lt; MAX_ENEMIES; i++) {
         if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
             int d = distance(tx, ty, enemies[i].x, enemies[i].y);
             if ( d &lt; minDistance || 
@@ -410,8 +411,8 @@ void initEnemy() {
 
     //currentX = SPAWN_X;
     //currentY = SPAWN_Y;
-    enemies[i].x = SPAWN_X;
-    enemies[i].y = SPAWN_Y;
+    enemies[enemyId].x = SPAWN_X;
+    enemies[enemyId].y = SPAWN_Y;
     
     if (enemies[enemyId].type == CIRCLE) {
         health = CIRCLE_HEALTH;
@@ -424,25 +425,25 @@ void initEnemy() {
     }
     
     //Check if it's possible to move
-    canMove = isValidMove(currentX + 1, currentY) || isValidMove(currentX, currentY + 1) || isValidMove(currentX - 1, currentY) || isValidMove(currentX, currentY - 1);
+    //canMove = isValidMove(currentX + 1, currentY) || isValidMove(currentX, currentY + 1) || isValidMove(currentX - 1, currentY) || isValidMove(currentX, currentY - 1);
 }
 
 //Move the enemy to the next cell selecting a random path when needed
 void move() {
-    if(posIdx &lt; PATHS_LEN[currrentPath] - 1){
+    if(posIdx &lt; PATHS_LEN[currentPath] - 1){
         posIdx++;
     }
     else{
-        select: i : int[0,1]
-        
+        int i = random(2) % 2;
+			
         currentPath = 2 * (currentPath + 1) - i; //Binary trees formula based on the order of the children
         posIdx = 0;
     }
 
     //currentX = PATHS[currentPath][posIdx][0];
     //currentY = PATHS[currentPath][posIdx][1];
-    enemies[i].x = PATHS[currentPath][posIdx][0];
-    enemies[i].y = PATHS[currentPath][posIdx][1];
+    enemies[enemyId].x = PATHS[currentPath][posIdx][0];
+    enemies[enemyId].y = PATHS[currentPath][posIdx][1];
 
 // if(currentPath == 0 &amp;&amp; posIdx &lt; PATH_1_LEN-1){
 //     posIdx++;
@@ -576,7 +577,7 @@ void move() {
 		<transition id="id39">
 			<source ref="id26"/>
 			<target ref="id27"/>
-			<label kind="guard" x="-340" y="-25">isMainTower(currentX,currentY)</label>
+			<label kind="guard" x="-340" y="-25">isMainTower(enemies[enemyId].x,enemies[enemyId].y)</label>
 		</transition>
 		<transition id="id40">
 			<source ref="id25"/>
