@@ -137,7 +137,7 @@ int counterC = 0; //circle
 int lastS = 0;
 int lastC = 0;
 clock localTimerC;
-clock localTimerS;
+clock localTimerS = 0;
 
 int findNext(int type) {
     int i;
@@ -173,6 +173,7 @@ void updateT() {
         }
     }
     counterT = tmp;
+    localTimerS = 0;
 }
 
 void updateE() {
@@ -231,19 +232,27 @@ void updateC() {
 		</location>
 		<init ref="id5"/>
 		<transition id="id13">
+			<source ref="id6"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-959" y="-170">localTimerS &gt; RETRY &amp;&amp; counterT&lt;NUM_TURRETS</label>
+			<label kind="assignment" x="-959" y="-136">updateT()</label>
+			<nail x="-892" y="-153"/>
+			<nail x="-977" y="-119"/>
+		</transition>
+		<transition id="id14">
 			<source ref="id11"/>
 			<target ref="id9"/>
 			<label kind="synchronisation" x="-578" y="-162">enemySpawn[lastC]!</label>
 			<nail x="-433" y="-136"/>
 		</transition>
-		<transition id="id14">
+		<transition id="id15">
 			<source ref="id9"/>
 			<target ref="id12"/>
 			<label kind="guard" x="-289" y="-170">counterC&lt;NUM_CIRCLES&amp;&amp;localTimerS&gt;=CIRCLE_SPAWN_TIME</label>
 			<label kind="assignment" x="-289" y="-144">updateC()</label>
 			<nail x="-246" y="-187"/>
 		</transition>
-		<transition id="id15">
+		<transition id="id16">
 			<source ref="id8"/>
 			<target ref="id8"/>
 			<label kind="guard" x="-509" y="153">counterM&lt;1</label>
@@ -253,19 +262,19 @@ void updateC() {
 			<nail x="-586" y="144"/>
 			<nail x="-586" y="144"/>
 		</transition>
-		<transition id="id16">
+		<transition id="id17">
 			<source ref="id8"/>
 			<target ref="id9"/>
 			<label kind="guard" x="-475" y="-34">counterM==1</label>
 			<label kind="synchronisation" x="-467" y="17">gameStart!</label>
 			<label kind="assignment" x="-500" y="0">updategameStart()</label>
 		</transition>
-		<transition id="id17">
+		<transition id="id18">
 			<source ref="id7"/>
 			<target ref="id8"/>
 			<label kind="guard" x="-654" y="-85">counterE==NUM_ENEMIES</label>
 		</transition>
-		<transition id="id18">
+		<transition id="id19">
 			<source ref="id7"/>
 			<target ref="id7"/>
 			<label kind="guard" x="-773" y="161">counterE&lt;NUM_ENEMIES</label>
@@ -274,12 +283,12 @@ void updateC() {
 			<nail x="-696" y="119"/>
 			<nail x="-773" y="119"/>
 		</transition>
-		<transition id="id19">
+		<transition id="id20">
 			<source ref="id6"/>
 			<target ref="id7"/>
 			<label kind="guard" x="-875" y="-76">counterT==NUM_TURRETS</label>
 		</transition>
-		<transition id="id20">
+		<transition id="id21">
 			<source ref="id6"/>
 			<target ref="id6"/>
 			<label kind="guard" x="-1002" y="153">counterT&lt;NUM_TURRETS</label>
@@ -288,7 +297,7 @@ void updateC() {
 			<nail x="-858" y="119"/>
 			<nail x="-977" y="119"/>
 		</transition>
-		<transition id="id21">
+		<transition id="id22">
 			<source ref="id5"/>
 			<target ref="id6"/>
 		</transition>
@@ -321,27 +330,28 @@ void setTurretStats() {
         damage = SNIPER_DAMAGE;
         range = SNIPER_RANGE;
     }
+    turretState[turretId] = true;
 }
 
 </declaration>
-		<location id="id22" x="-680" y="0">
+		<location id="id23" x="-680" y="0">
 			<name x="-722" y="-42">Not_Placed</name>
 			<committed/>
 		</location>
-		<location id="id23" x="-348" y="0">
+		<location id="id24" x="-348" y="0">
 			<name x="-365" y="-42">Placed</name>
 		</location>
-		<location id="id24" x="-119" y="0">
+		<location id="id25" x="-119" y="0">
 		</location>
-		<init ref="id22"/>
-		<transition id="id25">
-			<source ref="id23"/>
-			<target ref="id24"/>
+		<init ref="id23"/>
+		<transition id="id26">
+			<source ref="id24"/>
+			<target ref="id25"/>
 			<label kind="synchronisation" x="-330" y="-17">gameStart?</label>
 		</transition>
-		<transition id="id26">
-			<source ref="id22"/>
-			<target ref="id23"/>
+		<transition id="id27">
+			<source ref="id23"/>
+			<target ref="id24"/>
 			<label kind="synchronisation" x="-595" y="-25">turretSpawn!</label>
 			<label kind="assignment" x="-586" y="8">setTurretStats()</label>
 		</transition>
@@ -362,31 +372,31 @@ void setEnemyStats() {
     enemies[enemyId].spawnTime = -1;
 }
 </declaration>
-		<location id="id27" x="-1096" y="-51">
+		<location id="id28" x="-1096" y="-51">
 			<name x="-1106" y="-85">Not_Spawned</name>
 		</location>
-		<location id="id28" x="-875" y="-51">
+		<location id="id29" x="-875" y="-51">
 			<name x="-885" y="-85">Initialized</name>
 		</location>
-		<location id="id29" x="-595" y="-51">
+		<location id="id30" x="-595" y="-51">
 			<name x="-605" y="-85">Waiting_to_Spawn</name>
 		</location>
-		<location id="id30" x="-374" y="-51">
+		<location id="id31" x="-374" y="-51">
 			<name x="-384" y="-85">Waiting</name>
 		</location>
-		<init ref="id27"/>
-		<transition id="id31">
-			<source ref="id29"/>
-			<target ref="id30"/>
-		</transition>
+		<init ref="id28"/>
 		<transition id="id32">
-			<source ref="id28"/>
-			<target ref="id29"/>
-			<label kind="synchronisation" x="-807" y="-119">gameStart?</label>
+			<source ref="id30"/>
+			<target ref="id31"/>
 		</transition>
 		<transition id="id33">
-			<source ref="id27"/>
-			<target ref="id28"/>
+			<source ref="id29"/>
+			<target ref="id30"/>
+			<label kind="synchronisation" x="-807" y="-119">gameStart?</label>
+		</transition>
+		<transition id="id34">
+			<source ref="id28"/>
+			<target ref="id29"/>
 			<label kind="synchronisation" x="-1078" y="-68">enemySpawn[enemyId]!</label>
 			<label kind="assignment" x="-1078" y="-51">setEnemyStats()</label>
 		</transition>
@@ -397,13 +407,13 @@ mainTower = MainTower();
 t0 = TurretTemplate(0, BASIC);
 t1 = TurretTemplate(1, BASIC);
 t2 = TurretTemplate(2, BASIC);
-t3 = TurretTemplate(2, BASIC);
-t4 = TurretTemplate(2, BASIC);
-t5 = TurretTemplate(2, BASIC);
-t6 = TurretTemplate(2, BASIC);
-t7 = TurretTemplate(2, BASIC);
-t8 = TurretTemplate(2, BASIC);
-t9 = TurretTemplate(2, BASIC);
+t3 = TurretTemplate(3, BASIC);
+t4 = TurretTemplate(4, BASIC);
+t5 = TurretTemplate(5, BASIC);
+t6 = TurretTemplate(6, BASIC);
+t7 = TurretTemplate(7, BASIC);
+t8 = TurretTemplate(8, BASIC);
+t9 = TurretTemplate(9, BASIC);
 e0 = EnemyTemplate(0, CIRCLE);
 e1 = EnemyTemplate(0, CIRCLE);
 e2 = EnemyTemplate(0, CIRCLE);
