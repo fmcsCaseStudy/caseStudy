@@ -5,6 +5,18 @@
 //Constants related to Map of the game
 const int MAP_WIDTH = 16;
 const int MAP_HEIGHT = 9;
+
+typedef int[0,1] EnemyType; //0 -&gt; Circle, 1 -&gt; Square
+
+typedef struct {
+    bool active;
+    EnemyType type;
+    int x;
+    int y;
+    int health;
+    int spawnTime;  //Time when enemy spawned (for targeting priority)
+} Enemy;
+
 //Some global setting
 const int NUM_TURRETS = 10;
 const int NUM_CIRCLES = 3;
@@ -13,10 +25,14 @@ const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
 const int RETRY = 2;
 
 //Some global strucure
-bool turretState[NUM_TURRETS];
+bool turretState[NUM_TURRETS]; //bool array to save state
+Enemy enemies[NUM_ENEMIES]; //enemy array to store all enemy state
+
 
 //Some channel
-broadcast chan gameStart;
+broadcast chan gameStart; //signal to turret to start the game
+broadcast chan posUpdate;//when turret cannt find enemy will wait on posUpdate to rerun Findtarget()
+chan enemySpawning[NUM_ENEMIES];//allow to spwn enemy on map
 
 //Map Definition
 //    0 -&gt; Empty Cell  
@@ -69,7 +85,6 @@ const int MAIN_TOWER_LIFE = 10;
 
 /*----------------------------------------------------------------------------------------------------*/
 //Constants related to Enemy
-typedef int[0,1] EnemyType; //0 -&gt; Circle, 1 -&gt; Square
 const EnemyType CIRCLE = 0;
 const EnemyType SQUARE = 1;
 
@@ -83,14 +98,7 @@ const int SQUARE_DAMAGE = 4;
 const int CIRCLE_SPAWN_TIME = 2;
 const int SQUARE_SPAWN_TIME = 3;
 
-typedef struct {
-    bool active;
-    EnemyType type;
-    int x;
-    int y;
-    int health;
-    int spawnTime;  //Time when enemy spawned (for targeting priority)
-} Enemy;
+
 
 
 /*----------------------------------------------------------------------------------------------------*/
@@ -127,7 +135,6 @@ bool gameWon = false;
 
 
 
-Enemy enemies[NUM_ENEMIES];
 Turret turrets[10];
 int enemiesDefeated = 0;
 broadcast chan attackTower;
@@ -312,50 +319,69 @@ void updateC() {
 			<name x="-943" y="17">Start</name>
 			<committed/>
 		</location>
-		<location id="id7" x="-102" y="-93">
-			<name x="-112" y="-127">Win</name>
-		</location>
-		<location id="id8" x="-102" y="102">
-			<name x="-119" y="119">Lost</name>
-		</location>
-		<location id="id9" x="-544" y="0">
+		<location id="id7" x="-544" y="0">
 			<name x="-620" y="-34">Initialize_Enemy</name>
 		</location>
-		<location id="id10" x="-867" y="0">
+		<location id="id8" x="-867" y="0">
 			<name x="-909" y="-34">Initialize_Tower</name>
 		</location>
-		<location id="id11" x="-331" y="0">
+		<location id="id9" x="-136" y="0">
+		</location>
+		<location id="id10" x="136" y="0">
 		</location>
 		<init ref="id6"/>
+		<transition id="id11">
+			<source ref="id9"/>
+			<target ref="id10"/>
+		</transition>
 		<transition id="id12">
 			<source ref="id9"/>
-			<target ref="id11"/>
-			<label kind="guard" x="-518" y="-59">counterE==NUM_ENEMIES</label>
+			<target ref="id9"/>
+			<label kind="guard" x="-340" y="178">SQUARE_SPAWN_TIME &gt; localTimerS &amp;&amp; counterS &lt; NUM_SQUARES</label>
+			<label kind="synchronisation" x="-195" y="127">enemySpawning[lastS]!</label>
+			<label kind="assignment" x="-221" y="153">updateS()</label>
+			<nail x="-212" y="127"/>
+			<nail x="-34" y="127"/>
 		</transition>
 		<transition id="id13">
 			<source ref="id9"/>
 			<target ref="id9"/>
+			<label kind="guard" x="-416" y="-221">CIRCLE_SPAWN_TIME &gt; localTimerC &amp;&amp; lastC &lt; NUM_CIRCLES</label>
+			<label kind="synchronisation" x="-204" y="-110">enemySpawning[lastC]!</label>
+			<label kind="assignment" x="-170" y="-144">updateC()</label>
+			<nail x="-51" y="-153"/>
+			<nail x="-212" y="-153"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id7"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-518" y="-59">counterE==NUM_ENEMIES</label>
+			<label kind="synchronisation" x="-433" y="-25">gameStart!</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id7"/>
+			<target ref="id7"/>
 			<label kind="guard" x="-722" y="68">retryTimer &gt; RETRY &amp;&amp; counterE&lt;NUM_ENEMIES</label>
 			<label kind="assignment" x="-561" y="119">updateE()</label>
 			<nail x="-433" y="102"/>
 			<nail x="-629" y="102"/>
 		</transition>
-		<transition id="id14">
-			<source ref="id10"/>
-			<target ref="id10"/>
+		<transition id="id16">
+			<source ref="id8"/>
+			<target ref="id8"/>
 			<label kind="guard" x="-867" y="-93">retryTimer &gt; RETRY &amp;&amp; counterT&lt;NUM_TURRETS</label>
 			<label kind="assignment" x="-901" y="-153">updateT()</label>
 			<nail x="-782" y="-110"/>
 			<nail x="-943" y="-110"/>
 		</transition>
-		<transition id="id15">
-			<source ref="id10"/>
-			<target ref="id9"/>
+		<transition id="id17">
+			<source ref="id8"/>
+			<target ref="id7"/>
 			<label kind="guard" x="-833" y="8">counterT==NUM_TURRETS</label>
 		</transition>
-		<transition id="id16">
+		<transition id="id18">
 			<source ref="id6"/>
-			<target ref="id10"/>
+			<target ref="id8"/>
 		</transition>
 	</template>
 	<template>
@@ -364,8 +390,9 @@ void updateC() {
 		<declaration>int fireRate;            //How fast turret instance can fire
 int damage;              //Damage dealt by turret instance
 int range;               //Attack range of turret instance
-clock fireTimer;         //Timer for tracking reload time
+clock fireTimer = 0;         //Timer for tracking reload time
 clock retryTimer = 0;
+int targetEnemy = -1;
 
 void resetRetry() {
     retryTimer = 0;
@@ -415,33 +442,80 @@ int findTarget(int turretIndex) {
     return bestTarget;
 }
 </declaration>
-		<location id="id17" x="-756" y="0">
-			<name x="-798" y="-34">Not_Placed</name>
+		<location id="id19" x="-1173" y="8">
+			<name x="-1215" y="-26">Not_Placed</name>
 			<committed/>
 		</location>
-		<location id="id18" x="-586" y="0">
-			<name x="-596" y="-34">Placed</name>
+		<location id="id20" x="-1003" y="8">
+			<name x="-1013" y="-26">Placed</name>
 		</location>
-		<location id="id19" x="-442" y="0">
-			<name x="-452" y="-34">Idle</name>
+		<location id="id21" x="-875" y="8">
+			<name x="-885" y="-26">Idle</name>
 		</location>
-		<init ref="id17"/>
-		<transition id="id20">
-			<source ref="id18"/>
-			<target ref="id19"/>
-			<label kind="synchronisation" x="-568" y="-17">gameStart?</label>
+		<location id="id22" x="-654" y="8">
+			<name x="-664" y="-26">Firing</name>
+			<committed/>
+		</location>
+		<location id="id23" x="-765" y="161">
+			<name x="-775" y="127">Waiting_enemies</name>
+		</location>
+		<init ref="id19"/>
+		<transition id="id24">
+			<source ref="id22"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-1045" y="-238">targetEnemy != -1 &amp;&amp; enemies[targetEnemy].health &gt; 0</label>
+			<label kind="synchronisation" x="-849" y="-204">enemyHit[targetEnemy]!</label>
+			<label kind="assignment" x="-884" y="-178">applyDamage(targetEnemy, damage)</label>
+			<nail x="-671" y="-187"/>
+			<nail x="-867" y="-187"/>
 		</transition>
-		<transition id="id21">
-			<source ref="id17"/>
-			<target ref="id18"/>
-			<label kind="assignment" x="-738" y="0">setTurretStats()</label>
+		<transition id="id25">
+			<source ref="id23"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-909" y="68">posUpdate?</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id22"/>
+			<target ref="id23"/>
+			<label kind="guard" x="-765" y="85">targetEnemy  == -1 || enemies[targetEnemy].health &lt; 0</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id21"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-850" y="-68">fireTimer&gt;=fireRate</label>
+			<label kind="assignment" x="-850" y="-93">targetEnemy=findTarget(turretId)</label>
+		</transition>
+		<transition id="id28">
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-986" y="-68">gameStart?</label>
+		</transition>
+		<transition id="id29">
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="assignment" x="-1155" y="8">setTurretStats()</label>
 		</transition>
 	</template>
 	<template>
 		<name>EnemyTemplate</name>
-		<parameter>int enemyId, int enemyType</parameter>
+		<parameter>int enemyId, int enemyT</parameter>
 		<declaration>int step;
 int path;
+
+int health;              //Current health of the enemy instance
+int speed;               //Movement speed of the enemy instance
+int damage;              //Damage enemy instance deals to the tower
+
+bool canMove = false;    //Flag to control movement
+int x;                   //Current X position
+int y;                   //Current Y position
+clock moveTimer;         //Timer for controlling movement speed
+
+int damageReceived;      //Damage Received by the enemy instance to the main tower
+
+int[0,4] currentPath;    //0-&gt;PATH_1, 1-&gt;PATH_1_1, 2-&gt;PATH_1_2, 3-&gt;PATH_1_1_1, 4-&gt;PATH_1_1_2
+int posIdx;              //Position in the path
+
 
 void setEnemyStats() {
     step = 0;
@@ -449,111 +523,142 @@ void setEnemyStats() {
     enemies[enemyId].x = PATHS[path][step].x;
     enemies[enemyId].y = PATHS[path][step].y;
     enemies[enemyId].active = false;
-    enemies[enemyId].type = enemyType;
+    enemies[enemyId].type = enemyT;
     enemies[enemyId].spawnTime = -1;
 }
 
+void move(int i) {
+    if(step &lt; PATHS_LEN[path]){
+        step = step + 1; //just increment else change path
+    }
+    else{
+        if(path == 0 || path == 1) {
+            path = path + 1 + i;
+        }
+        if(path == 1) {
+            path = path + 2 + i;
+        }
+        step = 0;
+        enemies[enemyId].x = PATHS[path][step].x;
+        enemies[enemyId].y = PATHS[path][step].y;
+    }
+
+}
+
 </declaration>
-		<location id="id22" x="-1028" y="-493">
-			<name x="-1079" y="-527">Not_Spawned</name>
+		<location id="id30" x="-1377" y="-493">
+			<name x="-1428" y="-527">Not_Spawned</name>
 			<committed/>
 		</location>
-		<location id="id23" x="-722" y="-493">
+		<location id="id31" x="-722" y="-493">
 			<name x="-790" y="-527">Waiting</name>
 		</location>
-		<location id="id24" x="-450" y="-493">
+		<location id="id32" x="-450" y="-493">
 			<name x="-442" y="-527">Moving</name>
 		</location>
-		<location id="id25" x="-144" y="-493">
+		<location id="id33" x="-144" y="-493">
 			<name x="-178" y="-527">Attacking</name>
 		</location>
-		<location id="id26" x="-586" y="-663">
+		<location id="id34" x="-586" y="-663">
 			<name x="-603" y="-697">Dead</name>
 			<committed/>
 		</location>
-		<location id="id27" x="195" y="-493">
+		<location id="id35" x="195" y="-493">
 			<name x="161" y="-527">Left_Map</name>
 			<committed/>
 		</location>
-		<location id="id28" x="-586" y="-289">
+		<location id="id36" x="-586" y="-289">
 			<name x="-594" y="-272">Hit</name>
 			<committed/>
 		</location>
-		<init ref="id22"/>
-		<transition id="id29">
-			<source ref="id23"/>
-			<target ref="id26"/>
-			<label kind="guard" x="-986" y="-629">health&lt;=0</label>
-			<label kind="assignment" x="-986" y="-612">enemies[enemyId].active=false,
+		<location id="id37" x="-1173" y="-501">
+			<name x="-1183" y="-535">Initialized</name>
+		</location>
+		<location id="id38" x="-1003" y="-518">
+			<name x="-1013" y="-552">Idle</name>
+		</location>
+		<init ref="id30"/>
+		<transition id="id39">
+			<source ref="id38"/>
+			<target ref="id31"/>
+		</transition>
+		<transition id="id40">
+			<source ref="id37"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-1173" y="-578">enemySpawning[enemyId]?</label>
+		</transition>
+		<transition id="id41">
+			<source ref="id30"/>
+			<target ref="id37"/>
+			<label kind="assignment" x="-1360" y="-595">setEnemyStats()</label>
+		</transition>
+		<transition id="id42">
+			<source ref="id31"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-892" y="-697">health&lt;=0</label>
+			<label kind="assignment" x="-969" y="-646">enemies[enemyId].active=false,
 enemiesDefeated++</label>
 			<nail x="-722" y="-663"/>
 		</transition>
-		<transition id="id30">
-			<source ref="id28"/>
-			<target ref="id24"/>
+		<transition id="id43">
+			<source ref="id36"/>
+			<target ref="id32"/>
 			<label kind="guard" x="-441" y="-306">health&gt;0 &amp;&amp; canMove</label>
 			<label kind="assignment" x="-416" y="-289">moveTimer=0</label>
 			<nail x="-450" y="-289"/>
 		</transition>
-		<transition id="id31">
-			<source ref="id24"/>
-			<target ref="id28"/>
+		<transition id="id44">
+			<source ref="id32"/>
+			<target ref="id36"/>
 			<label kind="synchronisation" x="-501" y="-416">enemyHit[enemyId]?</label>
 		</transition>
-		<transition id="id32">
-			<source ref="id28"/>
-			<target ref="id23"/>
+		<transition id="id45">
+			<source ref="id36"/>
+			<target ref="id31"/>
 			<label kind="guard" x="-705" y="-289">health&gt;0</label>
 			<nail x="-722" y="-289"/>
 		</transition>
-		<transition id="id33">
-			<source ref="id23"/>
-			<target ref="id28"/>
+		<transition id="id46">
+			<source ref="id31"/>
+			<target ref="id36"/>
 			<label kind="synchronisation" x="-816" y="-416">enemyHit[enemyId]?</label>
 		</transition>
-		<transition id="id34">
-			<source ref="id24"/>
-			<target ref="id26"/>
+		<transition id="id47">
+			<source ref="id32"/>
+			<target ref="id34"/>
 			<label kind="guard" x="-442" y="-629">health&lt;=0</label>
 			<label kind="assignment" x="-442" y="-612">enemies[enemyId].active=false,
 enemiesDefeated++</label>
 			<nail x="-450" y="-663"/>
 		</transition>
-		<transition id="id35">
-			<source ref="id25"/>
-			<target ref="id27"/>
+		<transition id="id48">
+			<source ref="id33"/>
+			<target ref="id35"/>
 			<label kind="synchronisation" x="-25" y="-518">attackTower!</label>
 			<label kind="assignment" x="-59" y="-484">mainTowerLife-=damage,
 damageReceived=damage</label>
 		</transition>
-		<transition id="id36">
-			<source ref="id24"/>
-			<target ref="id23"/>
+		<transition id="id49">
+			<source ref="id32"/>
+			<target ref="id31"/>
 			<label kind="guard" x="-629" y="-450">!canMove</label>
 			<nail x="-535" y="-450"/>
 			<nail x="-646" y="-450"/>
 		</transition>
-		<transition id="id37">
-			<source ref="id24"/>
-			<target ref="id25"/>
+		<transition id="id50">
+			<source ref="id32"/>
+			<target ref="id33"/>
 			<label kind="guard" x="-365" y="-518">isMainTower(x,y)</label>
 		</transition>
-		<transition id="id38">
-			<source ref="id23"/>
-			<target ref="id24"/>
+		<transition id="id51">
+			<source ref="id31"/>
+			<target ref="id32"/>
 			<label kind="select" x="-637" y="-578">i : int[0,1]</label>
 			<label kind="guard" x="-697" y="-561">moveTimer&gt;=speed &amp;&amp; canMove</label>
 			<label kind="assignment" x="-637" y="-527">moveTimer=0,
 move(i)</label>
 			<nail x="-646" y="-535"/>
 			<nail x="-535" y="-535"/>
-		</transition>
-		<transition id="id39">
-			<source ref="id22"/>
-			<target ref="id23"/>
-			<label kind="guard" x="-977" y="-518">enemies[enemyId].active</label>
-			<label kind="assignment" x="-935" y="-484">initEnemy(),
-moveTimer=0</label>
 		</transition>
 	</template>
 	<system>gameController = GameController();
@@ -570,8 +675,8 @@ t7 = TurretTemplate(7, BASIC);
 t8 = TurretTemplate(8, BASIC);
 t9 = TurretTemplate(9, BASIC);
 e0 = EnemyTemplate(0, CIRCLE);
-e1 = EnemyTemplate(0, CIRCLE);
-e2 = EnemyTemplate(0, CIRCLE);
+e1 = EnemyTemplate(1, CIRCLE);
+e2 = EnemyTemplate(2, CIRCLE);
 
 
 //processes that compose the system
