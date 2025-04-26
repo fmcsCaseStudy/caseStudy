@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+typedef int[0,1] EnemyType; //0 -&gt; Circle, 1 -&gt; Square
+const EnemyType CIRCLE = 0;
+const EnemyType SQUARE = 1;
+
+const int CIRCLE_SPEED = 1;
+const int CIRCLE_HEALTH = 10;
+const int CIRCLE_DAMAGE = 2;
+const int SQUARE_SPEED = 3;
+const int SQUARE_HEALTH = 20;
+const int SQUARE_DAMAGE = 4;
+
+const int CIRCLE_SPAWN_TIME = 2;
+const int SQUARE_SPAWN_TIME = 3;
+
+typedef struct {
+    int x;
+    int y;
+} Coordinate;
+
+typedef struct {
+    bool active;
+    EnemyType type;
+    Coordinate pos;
+    int health;
+    int speed;
+} Enemy;
+
+const Coordinate SPAWN_POS = { 0, 0};
+const Coordinate MAIN_TOWER_POS = { 15, 4};
+const int NUM_PATH = 5;
+const int MAX_PATH_LEN = 14;
+const int PATHS_LEN[NUM_PATH] = { 12, 6, 14, 8, 8 };
+const Coordinate PATHS[5][MAX_PATH_LEN] = {
+    { {  0, 0 }, {  0, 1 }, {  0, 2 }, {  0, 3 }, {  0, 4 }, {  1, 4 }, {  2,  4 }, {  3,  4 }, {  4,  4 }, {  5,  4 }, {  6,  4 }, {  7,  4 }, { -1, -1 }, { -1, -1 } },
+    { {  7, 5 }, {  7, 6 }, {  7, 7 }, {  8, 7 }, {  9, 7 }, { 10, 7 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+    { {  7, 3 }, {  7, 2 }, {  7, 1 }, {  8, 1 }, {  9, 1 }, { 10, 1 }, { 11,  1 }, { 12,  1 }, { 13,  1 }, { 14,  1 }, { 15,  1 }, { 15,  2 }, { 15,  3 }, { 15,  4 } },
+    { { 11, 7 }, { 12, 7 }, { 13, 7 }, { 14, 7 }, { 15, 7 }, { 15, 6 }, { 15,  5 }, { 15,  4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+    { { 10, 6 }, { 10, 5 }, { 10, 4 }, { 11, 4 }, { 12, 4 }, { 13, 4 }, { 14,  4 }, { 15,  4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } }
+};
+
+const int NUM_CIRCLES = 3;
+const int NUM_SQUARES = 3;
+const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
+const int MAIN_TOWER_LIFE = 20;
+//global state
+int mainTowerLife = MAIN_TOWER_LIFE;
+Enemy enemies[NUM_ENEMIES];
+
+//global channel
+chan enemySpawning[NUM_ENEMIES];
+broadcast chan gameOver;
+
+bool isPath(Coordinate pos){
+    int i, j;
+
+    for(i = 0; i &lt; NUM_PATH; i++){
+        for(j = 0; j &lt; PATHS_LEN[i]; j++){
+            if(pos.x == PATHS[i][j].x &amp;&amp; pos.y == PATHS[i][j].y) 
+                return true;
+        }
+    }
+    return false;        
+}</declaration>
+	<template>
+		<name>GameController</name>
+		<declaration>clock circleSpawnTimer;      //Track circle spawn time
+clock squareSpawnTimer;      //Track square spawn time+
+
+int circlesSpawned = 0;      //Track the number of circles that have been spawned
+int squaresSpawned = 0;      //Track the number of squares that have been spawned
+int enemiesSpawned = 0;      //Track the number of enemies that have been spawned
+
+void initMainTower() {
+    mainTowerLife = MAIN_TOWER_LIFE;
+}
+
+void spawnEnemy(EnemyType type) {
+    enemies[enemiesSpawned].active     = true;
+    enemies[enemiesSpawned].type       = type;
+    enemies[enemiesSpawned].pos        = SPAWN_POS;
+    if(type == CIRCLE) {
+        enemies[enemiesSpawned].health = CIRCLE_HEALTH;
+        enemies[enemiesSpawned].speed = CIRCLE_SPEED;
+        circlesSpawned += 1;
+        circleSpawnTimer = 0;
+    }
+    else {
+        enemies[enemiesSpawned].health = SQUARE_HEALTH;
+        squaresSpawned += 1;
+        squareSpawnTimer = 0;
+        enemies[enemiesSpawned].speed = SQUARE_SPEED;
+    }
+    enemiesSpawned += 1;
+}</declaration>
+		<location id="id0" x="-136" y="0">
+			<name x="-146" y="-34">Place_Enemy</name>
+			<label kind="invariant" x="-340" y="-272">(circlesSpawned==NUM_CIRCLES || circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
+(squaresSpawned==NUM_SQUARES || squareSpawnTimer&lt;=SQUARE_SPAWN_TIME) &amp;&amp;
+(mainTowerLife&gt;=0)</label>
+		</location>
+		<location id="id1" x="34" y="0">
+			<name x="24" y="-34">Game_Over</name>
+		</location>
+		<location id="id2" x="-136" y="-136">
+			<name x="-146" y="-170">Spawn_Circle</name>
+			<committed/>
+		</location>
+		<location id="id3" x="-136" y="136">
+			<name x="-170" y="153">Spawn_Square</name>
+			<committed/>
+		</location>
+		<init ref="id0"/>
+		<transition id="id4">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<nail x="-238" y="136"/>
+		</transition>
+		<transition id="id5">
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<nail x="-238" y="-136"/>
+		</transition>
+		<transition id="id6">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-68" y="-144">circlesSpawned&lt;NUM_CIRCLES &amp;&amp;
+circleSpawnTimer==CIRCLE_SPAWN_TIME</label>
+			<label kind="synchronisation" x="-93" y="-102">enemySpawning[enemiesSpawned]!</label>
+			<label kind="assignment" x="-136" y="-68">spawnEnemy(CIRCLE)</label>
+		</transition>
+		<transition id="id7">
+			<source ref="id0"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-136" y="34">squaresSpawned&lt;NUM_SQUARES &amp;&amp;
+squareSpawnTimer==SQUARE_SPAWN_TIME</label>
+			<label kind="synchronisation" x="-136" y="68">enemySpawning[enemiesSpawned]!</label>
+			<label kind="assignment" x="-136" y="85">spawnEnemy(SQUARE)</label>
+		</transition>
+		<transition id="id8">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-110" y="-51">mainTowerLife&lt;=0</label>
+			<label kind="synchronisation" x="-93" y="0">gameOver!</label>
+		</transition>
+	</template>
+	<template>
+		<name>EnemyTemplate</name>
+		<parameter>int enemyId</parameter>
+		<declaration>int step;
+int path;
+bool isMainTower;
+clock spawnTime;
+clock moveTimer; 
+
+void initTimer() {
+    spawnTime = 0;
+    moveTimer = 0; 
+    isMainTower = false;
+}
+
+void move(int i) {
+    if(step &lt; PATHS_LEN[path]-1){
+        step = step + 1; //just increment else change path
+    }
+    else{
+        if(path == 0 || path == 1) {
+            path = path + 1 + i;
+        }
+        if(path == 1) {
+            path = path + 2 + i;
+        }
+        step = 0;
+    }
+    enemies[enemyId].pos.x = PATHS[path][step].x;
+    enemies[enemyId].pos.y = PATHS[path][step].y;
+    moveTimer = 0;
+    isMainTower = enemies[enemyId].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[enemyId].pos.y==MAIN_TOWER_POS.y;
+}
+
+void applyDamage(int enemyType) {
+    enemies[enemyId].active=false;
+    if(enemies[enemyId].type == CIRCLE) {
+        mainTowerLife-=CIRCLE_DAMAGE;
+    }
+    else {
+        mainTowerLife-=SQUARE_DAMAGE;
+    }
+}
+
+
+</declaration>
+		<location id="id9" x="-340" y="0">
+			<name x="-350" y="-34">Not_Spawned</name>
+		</location>
+		<location id="id10" x="-136" y="0">
+			<name x="-146" y="-34">Moving</name>
+			<label kind="invariant" x="-263" y="-212">moveTimer&lt;=enemies[enemyId].speed</label>
+		</location>
+		<location id="id11" x="68" y="0">
+			<name x="58" y="-34">Dead</name>
+		</location>
+		<branchpoint id="id12" x="-136" y="-17"/>
+		<init ref="id9"/>
+		<transition id="id13">
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-102" y="-76">gameOver?</label>
+			<nail x="-136" y="-34"/>
+			<nail x="68" y="-34"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="guard" x="17" y="-59">isMainTower</label>
+			<label kind="assignment" x="-59" y="-119">applyDamage(enemies[enemyId].type)</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id10"/>
+			<target ref="id10"/>
+			<label kind="select" x="-178" y="85">i : int[0,1]</label>
+			<label kind="guard" x="-212" y="102">moveTimer==enemies[enemyId].speed &amp;&amp; !isMainTower &amp;&amp; enemies[enemyId].active</label>
+			<label kind="assignment" x="-152" y="68">move(i)</label>
+			<nail x="-170" y="68"/>
+			<nail x="-102" y="68"/>
+		</transition>
+		<transition id="id16">
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="-323" y="-76">enemySpawning[enemyId]?</label>
+			<label kind="assignment" x="-289" y="8">initTimer()</label>
+		</transition>
+	</template>
+	<system>gameController = GameController();
+
+typedef int[0, NUM_ENEMIES - 1] enemyId_t;    
+EnemyProcess(const enemyId_t id) = EnemyTemplate(id);    
+
+//processes that compose the system
+system gameController, EnemyProcess;</system>
+	<queries>
+		<query>
+			<formula>A[] (deadlock imply forall (i : enemyId_t) EnemyProcess(i).Dead)
+
+</formula>
+			<comment/>
+			<option key="--diagnostic" value="0"/>
+			<result outcome="success" type="quality" timestamp="2025-04-26 23:52:17 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[i].pos.y==MAIN_TOWER_POS.y)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-04-26 23:25:22 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].type == CIRCLE imply EnemyProcess(i).spawnTime&lt;=26  * CIRCLE_SPEED)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-04-26 23:28:48 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].type == SQUARE imply EnemyProcess(i).spawnTime&lt;=26  * SQUARE_SPEED)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-04-26 23:29:09 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-04-26 23:58:12 +0200">
+			</result>
+		</query>
+	</queries>
+</nta>
