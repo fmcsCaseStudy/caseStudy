@@ -163,6 +163,7 @@ void initTimer() {
 }
 
 void move(int i) {
+    moveTimer = 0;
     if(step &lt; PATHS_LEN[path]-1){
         step = step + 1; //just increment else change path
     }
@@ -177,8 +178,8 @@ void move(int i) {
     }
     enemies[enemyId].pos.x = PATHS[path][step].x;
     enemies[enemyId].pos.y = PATHS[path][step].y;
-    moveTimer = 0;
     isMainTower = enemies[enemyId].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[enemyId].pos.y==MAIN_TOWER_POS.y;
+
 }
 
 void applyDamage(int enemyType) {
@@ -248,32 +249,32 @@ system gameController, EnemyProcess;</system>
 </formula>
 			<comment/>
 			<option key="--diagnostic" value="0"/>
-			<result outcome="success" type="quality" timestamp="2025-04-26 23:52:17 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 11:18:09 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[i].pos.y==MAIN_TOWER_POS.y)</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-04-26 23:25:22 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 11:23:47 +0200">
 			</result>
 		</query>
 		<query>
-			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].type == CIRCLE imply EnemyProcess(i).spawnTime&lt;=26  * CIRCLE_SPEED)</formula>
+			<formula>A[] (forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; EnemyProcess(i).Moving) imply EnemyProcess(i).spawnTime&lt;=26*CIRCLE_SPEED))</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-04-26 23:28:48 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 11:32:03 +0200">
 			</result>
 		</query>
 		<query>
-			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].type == SQUARE imply EnemyProcess(i).spawnTime&lt;=26  * SQUARE_SPEED)</formula>
+			<formula>A[] (forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; EnemyProcess(i).Moving) imply EnemyProcess(i).spawnTime&lt;=26*SQUARE_SPEED))</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-04-26 23:29:09 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 11:32:16 +0200">
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-04-26 23:58:12 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 11:18:19 +0200">
 			</result>
 		</query>
 	</queries>
