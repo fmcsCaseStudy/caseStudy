@@ -59,7 +59,6 @@ typedef struct {
     bool active;
     EnemyType type;
     Coordinate pos;
-    int health;
     int spawnTime;  //Time when enemy spawned (for targeting priority)
 } Enemy;
 
@@ -89,19 +88,38 @@ typedef struct {
 
 
 /*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
 //Enemy Wave Parameters (VANILLA VERSION)
 const int NUM_CIRCLES = 3;
 const int NUM_SQUARES = 3;
 const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
 
 //Turret Wave Parameters (VANILLA VERSION)
-const int[0, TURRETS_POS_LEN] NUM_TURRETS = 7;
+const int[0, TURRETS_POS_LEN] NUM_TURRETS = 0;
 const TurretType TURRET_TYPES[TURRETS_POS_LEN] = {
     BASIC, CANNON, CANNON, CANNON, CANNON, SNIPER, SNIPER
 };
 const int[0, TURRETS_POS_LEN-1] TURRET_SELECTED_POS[TURRETS_POS_LEN] = {
     1, 2, 3, 5, 6, 0, 4
 };
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
 
 
 /*----------------------------------------------------------------------------------------------------*/
@@ -159,44 +177,44 @@ bool isPath(Coordinate pos){
 </declaration>
 	<template>
 		<name x="5" y="5">MainTower</name>
-		<location id="id0" x="-476" y="-34">
-			<name x="-501" y="-76">Alive</name>
+		<location id="id0" x="-544" y="-34">
+			<name x="-569" y="-76">Alive</name>
 		</location>
-		<location id="id1" x="-102" y="-34">
-			<name x="-119" y="-76">Hit</name>
+		<location id="id1" x="-34" y="-34">
+			<name x="-51" y="-76">Hit</name>
 			<committed/>
 		</location>
-		<location id="id2" x="161" y="-34">
-			<name x="119" y="-76">Destroyed</name>
+		<location id="id2" x="306" y="-34">
+			<name x="264" y="-76">Destroyed</name>
 		</location>
 		<init ref="id0"/>
 		<transition id="id3">
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="synchronisation" x="-391" y="-17">towerAttacking[SQUARE]?</label>
-			<label kind="assignment" x="-416" y="17">mainTowerLife-=SQUARE_DAMAGE</label>
-			<nail x="-399" y="8"/>
-			<nail x="-178" y="8"/>
+			<label kind="synchronisation" x="-391" y="-9">towerAttacking[SQUARE]?</label>
+			<label kind="assignment" x="-408" y="25">mainTowerLife-=SQUARE_DAMAGE</label>
+			<nail x="-442" y="17"/>
+			<nail x="-136" y="17"/>
 		</transition>
 		<transition id="id4">
 			<source ref="id1"/>
 			<target ref="id0"/>
-			<label kind="guard" x="-357" y="60">mainTowerLife&gt;0</label>
-			<nail x="-102" y="85"/>
-			<nail x="-476" y="85"/>
+			<label kind="guard" x="-357" y="111">mainTowerLife&gt;0</label>
+			<nail x="-34" y="136"/>
+			<nail x="-544" y="136"/>
 		</transition>
 		<transition id="id5">
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="guard" x="-42" y="-59">mainTowerLife&lt;=0</label>
+			<label kind="guard" x="68" y="-59">mainTowerLife&lt;=0</label>
 		</transition>
 		<transition id="id6">
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="synchronisation" x="-391" y="-102">towerAttacking[CIRCLE]?</label>
-			<label kind="assignment" x="-416" y="-68">mainTowerLife-=CIRCLE_DAMAGE</label>
-			<nail x="-399" y="-76"/>
-			<nail x="-178" y="-76"/>
+			<label kind="synchronisation" x="-391" y="-110">towerAttacking[CIRCLE]?</label>
+			<label kind="assignment" x="-408" y="-76">mainTowerLife-=CIRCLE_DAMAGE</label>
+			<nail x="-442" y="-85"/>
+			<nail x="-136" y="-85"/>
 		</transition>
 	</template>
 	<template>
@@ -213,29 +231,27 @@ clock squareSpawnTimer;      //Track square spawn time
 
 //Place a turret and setup the related global variables
 void placeTurret() {
-    turrets[turretsPlaced].placed      = true;
-    turrets[turretsPlaced].type        = TURRET_TYPES[turretsPlaced];
-    turrets[turretsPlaced].pos         = TURRETS_POS[TURRET_SELECTED_POS[turretsPlaced]];
+    turrets[turretsPlaced].placed = true;
+    turrets[turretsPlaced].type   = TURRET_TYPES[turretsPlaced];
+    turrets[turretsPlaced].pos    = TURRETS_POS[TURRET_SELECTED_POS[turretsPlaced]];
 
     turretsPlaced += 1;
 }
 
 //Spawn an enemy and setup the related global variables
 void spawnEnemy(EnemyType type) {
-    enemies[enemiesSpawned].active     = true;
-    enemies[enemiesSpawned].type       = type;
-    enemies[enemiesSpawned].pos        = SPAWN_POS;
+    enemies[enemiesSpawned].active = true;
+    enemies[enemiesSpawned].type   = type;
+    enemies[enemiesSpawned].pos    = SPAWN_POS;
 
     if(type == CIRCLE) {
-        enemies[enemiesSpawned].health = CIRCLE_HEALTH;
-        enemies[enemiesSpawned].spawnTime  = circlesSpawned * CIRCLE_SPAWN_TIME;
+        enemies[enemiesSpawned].spawnTime = circlesSpawned * CIRCLE_SPAWN_TIME;
 
         circlesSpawned += 1;
         circleSpawnTimer = 0;
     }
     else {
-        enemies[enemiesSpawned].health = SQUARE_HEALTH;        
-        enemies[enemiesSpawned].spawnTime  = squaresSpawned * SQUARE_SPAWN_TIME;
+        enemies[enemiesSpawned].spawnTime = squaresSpawned * SQUARE_SPAWN_TIME;
 
         squaresSpawned += 1;
         squareSpawnTimer = 0;
@@ -245,121 +261,117 @@ void spawnEnemy(EnemyType type) {
 }
 
 </declaration>
-		<location id="id7" x="-884" y="-484">
-			<name x="-909" y="-527">Start</name>
-			<committed/>
+		<location id="id7" x="238" y="-272">
+			<name x="222" y="-255">Won</name>
 		</location>
-		<location id="id8" x="254" y="-246">
-			<name x="238" y="-229">Won</name>
+		<location id="id8" x="102" y="-272">
+			<name x="85" y="-254">Lost</name>
 		</location>
-		<location id="id9" x="135" y="-247">
-			<name x="118" y="-229">Lost</name>
-		</location>
-		<location id="id10" x="195" y="-484">
-			<name x="110" y="-484">Playing</name>
-			<label kind="invariant" x="229" y="-501">(circlesSpawned==NUM_CIRCLES || circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
+		<location id="id9" x="170" y="-476">
+			<name x="85" y="-476">Playing</name>
+			<label kind="invariant" x="204" y="-493">(circlesSpawned==NUM_CIRCLES || circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
 (squaresSpawned==NUM_SQUARES || squareSpawnTimer&lt;=SQUARE_SPAWN_TIME)</label>
 		</location>
-		<location id="id11" x="-697" y="-484">
-			<name x="-748" y="-527">Place_Turret</name>
+		<location id="id10" x="-748" y="-476">
+			<name x="-799" y="-519">Place_Turret</name>
 			<committed/>
 		</location>
-		<location id="id12" x="127" y="-680">
-			<name x="77" y="-723">Spawn_Circle</name>
+		<location id="id11" x="102" y="-680">
+			<name x="52" y="-723">Spawn_Circle</name>
 			<committed/>
 		</location>
-		<location id="id13" x="263" y="-680">
-			<name x="212" y="-722">Spawn_Square</name>
+		<location id="id12" x="238" y="-680">
+			<name x="187" y="-722">Spawn_Square</name>
 			<committed/>
 		</location>
-		<location id="id14" x="-340" y="-484">
-			<name x="-323" y="-484">Initial_Enemies</name>
+		<location id="id13" x="-374" y="-476">
+			<name x="-357" y="-476">Initial_Enemies</name>
 			<committed/>
 		</location>
-		<init ref="id7"/>
+		<init ref="id10"/>
+		<transition id="id14">
+			<source ref="id13"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-450" y="-399">squaresSpawned==0</label>
+			<label kind="synchronisation" x="-510" y="-382">enemySpawning[enemiesSpawned]!</label>
+			<label kind="assignment" x="-450" y="-365">spawnEnemy(SQUARE)</label>
+			<nail x="-340" y="-408"/>
+			<nail x="-408" y="-408"/>
+		</transition>
 		<transition id="id15">
-			<source ref="id14"/>
-			<target ref="id14"/>
-			<label kind="guard" x="-425" y="-425">squaresSpawned==0</label>
-			<label kind="synchronisation" x="-484" y="-408">enemySpawning[enemiesSpawned]!</label>
-			<label kind="assignment" x="-425" y="-391">spawnEnemy(SQUARE)</label>
-			<nail x="-306" y="-425"/>
-			<nail x="-374" y="-425"/>
+			<source ref="id13"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-450" y="-603">circlesSpawned==0</label>
+			<label kind="synchronisation" x="-510" y="-586">enemySpawning[enemiesSpawned]!</label>
+			<label kind="assignment" x="-450" y="-569">spawnEnemy(CIRCLE)</label>
+			<nail x="-340" y="-544"/>
+			<nail x="-408" y="-544"/>
 		</transition>
 		<transition id="id16">
-			<source ref="id14"/>
-			<target ref="id14"/>
-			<label kind="guard" x="-424" y="-603">circlesSpawned==0</label>
-			<label kind="synchronisation" x="-484" y="-586">enemySpawning[enemiesSpawned]!</label>
-			<label kind="assignment" x="-424" y="-569">spawnEnemy(CIRCLE)</label>
-			<nail x="-306" y="-544"/>
-			<nail x="-374" y="-544"/>
+			<source ref="id10"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-680" y="-501">turretsPlaced==NUM_TURRETS</label>
+			<label kind="assignment" x="-612" y="-476">gameTimer=0</label>
 		</transition>
 		<transition id="id17">
-			<source ref="id11"/>
-			<target ref="id14"/>
-			<label kind="guard" x="-629" y="-510">turretsPlaced==NUM_TURRETS</label>
-			<label kind="assignment" x="-570" y="-484">gameTimer=0</label>
+			<source ref="id13"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-272" y="-501">circlesSpawned!=0 &amp;&amp; squaresSpawned!=0</label>
 		</transition>
 		<transition id="id18">
-			<source ref="id14"/>
-			<target ref="id10"/>
-			<label kind="guard" x="-238" y="-510">circlesSpawned!=0 &amp;&amp; squaresSpawned!=0</label>
+			<source ref="id11"/>
+			<target ref="id9"/>
+			<nail x="153" y="-680"/>
+			<nail x="153" y="-544"/>
 		</transition>
 		<transition id="id19">
-			<source ref="id12"/>
-			<target ref="id10"/>
+			<source ref="id9"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-212" y="-637">circlesSpawned&lt;NUM_CIRCLES &amp;&amp;
+circleSpawnTimer==CIRCLE_SPAWN_TIME</label>
+			<label kind="synchronisation" x="-212" y="-603">enemySpawning[enemiesSpawned]!</label>
+			<label kind="assignment" x="-212" y="-586">spawnEnemy(CIRCLE)</label>
+			<nail x="102" y="-544"/>
 		</transition>
 		<transition id="id20">
-			<source ref="id10"/>
-			<target ref="id12"/>
-			<label kind="guard" x="-187" y="-646">circlesSpawned&lt;NUM_CIRCLES &amp;&amp;
-circleSpawnTimer==CIRCLE_SPAWN_TIME</label>
-			<label kind="synchronisation" x="-187" y="-612">enemySpawning[enemiesSpawned]!</label>
-			<label kind="assignment" x="-187" y="-595">spawnEnemy(CIRCLE)</label>
-			<nail x="127" y="-552"/>
+			<source ref="id12"/>
+			<target ref="id9"/>
+			<nail x="187" y="-680"/>
+			<nail x="187" y="-544"/>
 		</transition>
 		<transition id="id21">
-			<source ref="id13"/>
-			<target ref="id10"/>
+			<source ref="id9"/>
+			<target ref="id12"/>
+			<label kind="guard" x="246" y="-637">squaresSpawned&lt;NUM_SQUARES &amp;&amp;
+squareSpawnTimer==SQUARE_SPAWN_TIME</label>
+			<label kind="synchronisation" x="246" y="-603">enemySpawning[enemiesSpawned]!</label>
+			<label kind="assignment" x="246" y="-586">spawnEnemy(SQUARE)</label>
+			<nail x="238" y="-544"/>
 		</transition>
 		<transition id="id22">
 			<source ref="id10"/>
-			<target ref="id13"/>
-			<label kind="guard" x="271" y="-646">squaresSpawned&lt;NUM_SQUARES &amp;&amp;
-squareSpawnTimer==SQUARE_SPAWN_TIME</label>
-			<label kind="synchronisation" x="271" y="-612">enemySpawning[enemiesSpawned]!</label>
-			<label kind="assignment" x="271" y="-595">spawnEnemy(SQUARE)</label>
-			<nail x="263" y="-552"/>
+			<target ref="id10"/>
+			<label kind="guard" x="-858" y="-400">turretsPlaced&lt;NUM_TURRETS</label>
+			<label kind="synchronisation" x="-884" y="-383">turretPositioning[turretsPlaced]!</label>
+			<label kind="assignment" x="-807" y="-366">placeTurret()</label>
+			<nail x="-714" y="-408"/>
+			<nail x="-782" y="-408"/>
 		</transition>
 		<transition id="id23">
-			<source ref="id11"/>
-			<target ref="id11"/>
-			<label kind="guard" x="-807" y="-400">turretsPlaced&lt;NUM_TURRETS</label>
-			<label kind="synchronisation" x="-833" y="-383">turretPositioning[turretsPlaced]!</label>
-			<label kind="assignment" x="-756" y="-366">placeTurret()</label>
-			<nail x="-654" y="-408"/>
-			<nail x="-739" y="-408"/>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-52" y="-382">mainTowerLife&lt;=0</label>
+			<label kind="synchronisation" x="-51" y="-365">endSignal!</label>
+			<label kind="assignment" x="-51" y="-348">gameOver=true</label>
+			<nail x="101" y="-408"/>
 		</transition>
 		<transition id="id24">
-			<source ref="id7"/>
-			<target ref="id11"/>
-		</transition>
-		<transition id="id25">
-			<source ref="id10"/>
-			<target ref="id9"/>
-			<label kind="guard" x="-19" y="-340">mainTowerLife&lt;=0</label>
-			<label kind="synchronisation" x="-18" y="-323">endSignal!</label>
-			<label kind="assignment" x="-18" y="-306">gameOver=true</label>
-			<nail x="135" y="-408"/>
-		</transition>
-		<transition id="id26">
-			<source ref="id10"/>
-			<target ref="id8"/>
-			<label kind="guard" x="263" y="-340">activeEnemies==0 &amp;&amp; mainTowerLife&gt;0</label>
-			<label kind="synchronisation" x="263" y="-323">endSignal!</label>
-			<label kind="assignment" x="263" y="-306">gameWon=true</label>
-			<nail x="254" y="-408"/>
+			<source ref="id9"/>
+			<target ref="id7"/>
+			<label kind="guard" x="246" y="-382">activeEnemies==0 &amp;&amp; mainTowerLife&gt;0</label>
+			<label kind="synchronisation" x="246" y="-365">endSignal!</label>
+			<label kind="assignment" x="246" y="-348">gameWon=true</label>
+			<nail x="238" y="-408"/>
 		</transition>
 	</template>
 	<template>
@@ -383,7 +395,7 @@ void setTurretStats() {
         fireRate = BASIC_FIRE_SPEED;
         damage = BASIC_DAMAGE;
         range = BASIC_RANGE;
-    } else if (turrets[turretId].type == CANNON) {
+    } else if (type == CANNON) {
         fireRate = CANNON_FIRE_SPEED;
         damage = CANNON_DAMAGE;
         range = CANNON_RANGE;
@@ -404,11 +416,10 @@ void findTarget() {
     Coordinate turretPos = turrets[turretId].pos;
     int minDistance = MAP_WIDTH + MAP_HEIGHT; //Initialize with a large value
     int maxSpawnTime = -1; //For enemies at same distance
-    int bestTarget = -1;
     int i;
 
     for ( i = 0; i &lt; NUM_ENEMIES; i++) {
-        if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; inRange(turretPos, range, enemies[i].pos)) {
+        if (enemies[i].active &amp;&amp; inRange(turretPos, range, enemies[i].pos)) {
             int d = distance(turretPos, enemies[i].pos);
             if ( d &lt; minDistance || 
                 (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; maxSpawnTime) || 
@@ -416,80 +427,79 @@ void findTarget() {
                ) {
                 minDistance = d;
                 maxSpawnTime = enemies[i].spawnTime;
-                bestTarget = i;
+                targetEnemy = i;
             }
         }
     }
-     
-    targetEnemy = bestTarget;
+    
     targetTimer = 0;
 }
 </declaration>
-		<location id="id27" x="-927" y="-382">
-			<name x="-978" y="-424">Not_Placed</name>
+		<location id="id25" x="-952" y="-374">
+			<name x="-1003" y="-416">Not_Placed</name>
 		</location>
-		<location id="id28" x="-595" y="-382">
-			<name x="-612" y="-450">Idle</name>
-			<label kind="invariant" x="-654" y="-433">targetTimer&lt;=1</label>
+		<location id="id26" x="-612" y="-374">
+			<name x="-603" y="-425">Searching</name>
+			<label kind="invariant" x="-603" y="-408">targetTimer&lt;=1</label>
 		</location>
-		<location id="id29" x="-162" y="-382">
-			<name x="-188" y="-424">Firing</name>
+		<location id="id27" x="-170" y="-374">
+			<name x="-196" y="-416">Firing</name>
 			<committed/>
 		</location>
-		<location id="id30" x="135" y="-382">
-			<name x="93" y="-425">Reloading</name>
-			<label kind="invariant" x="152" y="-391">fireTimer&lt;=fireRate</label>
+		<location id="id28" x="0" y="-374">
+			<name x="-93" y="-416">Reloading</name>
+			<label kind="invariant" x="-84" y="-357">fireTimer&lt;=fireRate</label>
 		</location>
-		<location id="id31" x="-162" y="-280">
-			<name x="-179" y="-263">End</name>
+		<location id="id29" x="238" y="-374">
+			<name x="221" y="-416">End</name>
 		</location>
-		<init ref="id27"/>
+		<init ref="id25"/>
+		<transition id="id30">
+			<source ref="id28"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="76" y="-399">endSignal?</label>
+		</transition>
+		<transition id="id31">
+			<source ref="id26"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-238" y="-306">endSignal?</label>
+			<nail x="-476" y="-306"/>
+			<nail x="102" y="-306"/>
+		</transition>
 		<transition id="id32">
-			<source ref="id30"/>
-			<target ref="id31"/>
-			<label kind="synchronisation" x="-43" y="-272">endSignal?</label>
-			<nail x="135" y="-280"/>
+			<source ref="id26"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-688" y="-306">targetEnemy==-1 &amp;&amp; 
+targetTimer==1</label>
+			<label kind="assignment" x="-663" y="-263">findTarget()</label>
+			<nail x="-578" y="-306"/>
+			<nail x="-646" y="-306"/>
 		</transition>
 		<transition id="id33">
-			<source ref="id28"/>
-			<target ref="id31"/>
-			<label kind="synchronisation" x="-349" y="-272">endSignal?</label>
-			<nail x="-434" y="-280"/>
+			<source ref="id25"/>
+			<target ref="id26"/>
+			<label kind="synchronisation" x="-901" y="-399">turretPositioning[turretId]?</label>
+			<label kind="assignment" x="-850" y="-374">setTurretStats()</label>
 		</transition>
 		<transition id="id34">
 			<source ref="id28"/>
-			<target ref="id28"/>
-			<label kind="guard" x="-671" y="-306">targetEnemy==-1 &amp;&amp; 
-targetTimer==1</label>
-			<label kind="assignment" x="-646" y="-263">findTarget()</label>
-			<nail x="-553" y="-306"/>
-			<nail x="-638" y="-307"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-391" y="-501">fireTimer==fireRate</label>
+			<label kind="assignment" x="-374" y="-476">targetEnemy=-1,
+targetTimer=0</label>
+			<nail x="0" y="-476"/>
+			<nail x="-612" y="-476"/>
 		</transition>
 		<transition id="id35">
 			<source ref="id27"/>
 			<target ref="id28"/>
-			<label kind="synchronisation" x="-876" y="-407">turretPositioning[turretId]?</label>
-			<label kind="assignment" x="-833" y="-374">setTurretStats()</label>
 		</transition>
 		<transition id="id36">
-			<source ref="id30"/>
-			<target ref="id28"/>
-			<label kind="guard" x="-314" y="-518">fireTimer==fireRate</label>
-			<label kind="assignment" x="-288" y="-484">targetEnemy=-1,
-targetTimer=0</label>
-			<nail x="-76" y="-493"/>
-			<nail x="-399" y="-493"/>
-		</transition>
-		<transition id="id37">
-			<source ref="id29"/>
-			<target ref="id30"/>
-			<label kind="assignment" x="-60" y="-374">fireTimer=0</label>
-		</transition>
-		<transition id="id38">
-			<source ref="id28"/>
-			<target ref="id29"/>
-			<label kind="guard" x="-451" y="-407">targetEnemy!=-1</label>
-			<label kind="synchronisation" x="-493" y="-374">enemyHit[targetEnemy][type]!</label>
+			<source ref="id26"/>
+			<target ref="id27"/>
+			<label kind="guard" x="-459" y="-399">targetEnemy!=-1</label>
+			<label kind="synchronisation" x="-510" y="-374">enemyHit[targetEnemy][type]!</label>
+			<label kind="assignment" x="-442" y="-357">fireTimer=0</label>
 		</transition>
 	</template>
 	<template>
@@ -507,7 +517,7 @@ clock moveTimer;         //Timer for controlling movement speed
 int damageReceived;      //Damage Received by the enemy instance to the main tower
 
 int[0,4] currentPath;    //0-&gt;PATH_1, 1-&gt;PATH_1_1, 2-&gt;PATH_1_2, 3-&gt;PATH_1_1_1, 4-&gt;PATH_1_1_2
-int posIdx;              //Position in the path
+int step;                //Position in the path
 
 //Initialize enemy instance based on its type
 void initEnemy() {
@@ -527,229 +537,239 @@ void initEnemy() {
     enemies[enemyId].pos = SPAWN_POS;
 
     currentPath = 0;
-    posIdx = 0;    
+    step = 0;    
 
     moveTimer = 0;
 }
 
 //Move the enemy to the next cell selecting a random path when needed
 void move(int i) {
-    if(posIdx &lt; PATHS_LEN[currentPath] - 1){
-        posIdx++;
+    if(step &lt; PATHS_LEN[currentPath] - 1){
+        step++;
     }
     else if(!isMainTower(pos)){
         currentPath = 2 * (currentPath + 1) - i; //Binary trees formula based on the order of the children
-        posIdx = 0;
+        step = 0;
     }
 
-    pos = PATHS[currentPath][posIdx];
-    enemies[enemyId].pos = PATHS[currentPath][posIdx];
+    pos = PATHS[currentPath][step];
+    enemies[enemyId].pos = PATHS[currentPath][step];
+
+    moveTimer = 0;
 }
 
 //Update the health of the enemy
 void receiveDamage(int damageReceived) {
     health -= damageReceived;
-    enemies[enemyId].health -= damageReceived;         //CHECK IF A MUTEX IS NECESSARY
+}
+
+//Deactive an enemy when he dies or left the map
+void deactiveEnemy() {
+    enemies[enemyId].active = false;
+    activeEnemies--;
 }</declaration>
-		<location id="id39" x="-1054" y="-493">
-			<name x="-1105" y="-535">Not_Spawned</name>
+		<location id="id37" x="-1054" y="-476">
+			<name x="-1105" y="-518">Not_Spawned</name>
 		</location>
-		<location id="id40" x="-731" y="-493">
-			<name x="-799" y="-535">Waiting</name>
-			<label kind="invariant" x="-697" y="-510">moveTimer&lt;=speed</label>
+		<location id="id38" x="-714" y="-476">
+			<name x="-782" y="-518">Waiting</name>
+			<label kind="invariant" x="-672" y="-493">moveTimer&lt;=speed</label>
 		</location>
-		<location id="id41" x="-416" y="-493">
-			<name x="-407" y="-535">Moving</name>
+		<location id="id39" x="-408" y="-476">
+			<name x="-399" y="-518">Moving</name>
 			<committed/>
 		</location>
-		<location id="id42" x="-102" y="-493">
-			<name x="-187" y="-535">Attacking</name>
-			<label kind="invariant" x="-93" y="-535">moveTimer&lt;=speed</label>
+		<location id="id40" x="-102" y="-476">
+			<name x="-187" y="-518">Attacking</name>
+			<label kind="invariant" x="-93" y="-518">moveTimer&lt;=speed</label>
 		</location>
-		<location id="id43" x="-110" y="-110">
-			<name x="-127" y="-153">Dead</name>
+		<location id="id41" x="-76" y="-102">
+			<name x="-93" y="-145">Dead</name>
 		</location>
-		<location id="id44" x="221" y="-493">
-			<name x="187" y="-535">Left_Map</name>
+		<location id="id42" x="204" y="-476">
+			<name x="170" y="-518">Left_Map</name>
 		</location>
-		<location id="id45" x="-416" y="-255">
-			<name x="-391" y="-280">Hit</name>
+		<location id="id43" x="-408" y="-238">
+			<name x="-383" y="-263">Hit</name>
 			<committed/>
 		</location>
-		<location id="id46" x="-416" y="-646">
-			<name x="-433" y="-688">End</name>
+		<location id="id44" x="-408" y="-612">
+			<name x="-425" y="-654">End</name>
 		</location>
-		<init ref="id39"/>
+		<init ref="id37"/>
+		<transition id="id45">
+			<source ref="id39"/>
+			<target ref="id44"/>
+			<label kind="synchronisation" x="-399" y="-595">endSignal?</label>
+		</transition>
+		<transition id="id46">
+			<source ref="id38"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-705" y="-196">enemyHit[enemyId][SNIPER]?</label>
+			<label kind="assignment" x="-714" y="-170">receiveDamage(SNIPER_DAMAGE)</label>
+			<nail x="-782" y="-357"/>
+			<nail x="-782" y="-170"/>
+			<nail x="-442" y="-170"/>
+		</transition>
 		<transition id="id47">
-			<source ref="id40"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-705" y="-221">enemyHit[enemyId][SNIPER]?</label>
-			<label kind="assignment" x="-714" y="-195">receiveDamage(SNIPER_DAMAGE)</label>
-			<nail x="-824" y="-374"/>
-			<nail x="-824" y="-195"/>
-			<nail x="-459" y="-195"/>
+			<source ref="id38"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-705" y="-263">enemyHit[enemyId][CANNON]?</label>
+			<label kind="assignment" x="-714" y="-238">receiveDamage(CANNON_DAMAGE)</label>
+			<nail x="-748" y="-357"/>
+			<nail x="-748" y="-238"/>
 		</transition>
 		<transition id="id48">
-			<source ref="id40"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-705" y="-280">enemyHit[enemyId][CANNON]?</label>
-			<label kind="assignment" x="-714" y="-255">receiveDamage(CANNON_DAMAGE)</label>
-			<nail x="-773" y="-374"/>
-			<nail x="-773" y="-255"/>
+			<source ref="id43"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-323" y="-399">health&gt;0 &amp;&amp;
+isMainTower(pos)</label>
+			<nail x="-374" y="-357"/>
+			<nail x="-136" y="-357"/>
 		</transition>
 		<transition id="id49">
-			<source ref="id45"/>
-			<target ref="id42"/>
-			<label kind="guard" x="-331" y="-416">health&gt;0 &amp;&amp;
-isMainTower(pos)</label>
-			<nail x="-374" y="-374"/>
-			<nail x="-161" y="-374"/>
+			<source ref="id40"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-348" y="-263">enemyHit[enemyId][CANNON]?</label>
+			<label kind="assignment" x="-357" y="-238">receiveDamage(CANNON_DAMAGE)</label>
+			<nail x="-68" y="-357"/>
+			<nail x="-68" y="-238"/>
 		</transition>
 		<transition id="id50">
-			<source ref="id42"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-348" y="-280">enemyHit[enemyId][CANNON]?</label>
-			<label kind="assignment" x="-357" y="-255">receiveDamage(CANNON_DAMAGE)</label>
-			<nail x="-59" y="-374"/>
-			<nail x="-60" y="-255"/>
+			<source ref="id40"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-348" y="-196">enemyHit[enemyId][SNIPER]?</label>
+			<label kind="assignment" x="-357" y="-170">receiveDamage(SNIPER_DAMAGE)</label>
+			<nail x="-34" y="-357"/>
+			<nail x="-34" y="-170"/>
+			<nail x="-374" y="-170"/>
 		</transition>
 		<transition id="id51">
-			<source ref="id42"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-348" y="-221">enemyHit[enemyId][SNIPER]?</label>
-			<label kind="assignment" x="-357" y="-195">receiveDamage(SNIPER_DAMAGE)</label>
-			<nail x="-17" y="-374"/>
-			<nail x="-17" y="-195"/>
-			<nail x="-374" y="-195"/>
+			<source ref="id38"/>
+			<target ref="id44"/>
+			<label kind="synchronisation" x="-705" y="-595">endSignal?</label>
+			<nail x="-714" y="-612"/>
 		</transition>
 		<transition id="id52">
 			<source ref="id40"/>
-			<target ref="id46"/>
-			<label kind="synchronisation" x="-629" y="-671">endSignal?</label>
-			<nail x="-731" y="-646"/>
+			<target ref="id44"/>
+			<label kind="synchronisation" x="-93" y="-595">endSignal?</label>
+			<nail x="-102" y="-612"/>
 		</transition>
 		<transition id="id53">
-			<source ref="id42"/>
-			<target ref="id46"/>
-			<label kind="synchronisation" x="-314" y="-671">endSignal?</label>
-			<nail x="-102" y="-646"/>
+			<source ref="id40"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-348" y="-332">enemyHit[enemyId][BASIC]?</label>
+			<label kind="assignment" x="-357" y="-306">receiveDamage(BASIC_DAMAGE)</label>
+			<nail x="-102" y="-306"/>
+			<nail x="-374" y="-306"/>
 		</transition>
 		<transition id="id54">
-			<source ref="id42"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-348" y="-340">enemyHit[enemyId][BASIC]?</label>
-			<label kind="assignment" x="-357" y="-314">receiveDamage(BASIC_DAMAGE)</label>
-			<nail x="-102" y="-314"/>
-			<nail x="-374" y="-314"/>
+			<source ref="id43"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-280" y="-127">health&lt;=0</label>
+			<label kind="assignment" x="-306" y="-102">deactiveEnemy()</label>
+			<nail x="-408" y="-102"/>
 		</transition>
 		<transition id="id55">
-			<source ref="id45"/>
-			<target ref="id43"/>
-			<label kind="guard" x="-314" y="-136">health&lt;=0</label>
-			<label kind="assignment" x="-408" y="-102">enemies[enemyId].active=false,
-activeEnemies--</label>
-			<nail x="-416" y="-110"/>
+			<source ref="id43"/>
+			<target ref="id38"/>
+			<label kind="guard" x="-637" y="-399">health&gt;0 &amp;&amp;
+!isMainTower(pos)</label>
+			<nail x="-442" y="-357"/>
+			<nail x="-680" y="-357"/>
 		</transition>
 		<transition id="id56">
-			<source ref="id45"/>
-			<target ref="id40"/>
-			<label kind="guard" x="-646" y="-416">health&gt;0 &amp;&amp;
-!isMainTower(pos)</label>
-			<nail x="-459" y="-374"/>
-			<nail x="-680" y="-374"/>
+			<source ref="id38"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-705" y="-332">enemyHit[enemyId][BASIC]?</label>
+			<label kind="assignment" x="-714" y="-298">receiveDamage(BASIC_DAMAGE)</label>
+			<nail x="-714" y="-306"/>
+			<nail x="-442" y="-306"/>
 		</transition>
 		<transition id="id57">
 			<source ref="id40"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-705" y="-340">enemyHit[enemyId][BASIC]?</label>
-			<label kind="assignment" x="-714" y="-306">receiveDamage(BASIC_DAMAGE)</label>
-			<nail x="-723" y="-314"/>
-			<nail x="-459" y="-314"/>
+			<target ref="id42"/>
+			<label kind="guard" x="-17" y="-501">moveTimer==speed</label>
+			<label kind="assignment" x="-17" y="-476">deactiveEnemy()</label>
 		</transition>
 		<transition id="id58">
-			<source ref="id42"/>
-			<target ref="id44"/>
-			<label kind="guard" x="-17" y="-518">moveTimer==speed</label>
-			<label kind="assignment" x="-68" y="-493">enemies[enemyId].active=false,
-activeEnemies--</label>
+			<source ref="id39"/>
+			<target ref="id38"/>
+			<label kind="guard" x="-637" y="-467">!isMainTower(pos)</label>
+			<nail x="-476" y="-442"/>
+			<nail x="-646" y="-442"/>
 		</transition>
 		<transition id="id59">
-			<source ref="id41"/>
-			<target ref="id40"/>
-			<label kind="guard" x="-646" y="-467">!isMainTower(pos)</label>
-			<label kind="assignment" x="-629" y="-450">moveTimer = 0</label>
-			<nail x="-484" y="-467"/>
-			<nail x="-663" y="-467"/>
-		</transition>
-		<transition id="id60">
-			<source ref="id41"/>
-			<target ref="id42"/>
-			<label kind="guard" x="-340" y="-518">isMainTower(pos)</label>
-			<label kind="synchronisation" x="-357" y="-484">towerAttacking[type]!</label>
-			<label kind="assignment" x="-323" y="-467">moveTimer = 0</label>
-		</transition>
-		<transition id="id61">
-			<source ref="id40"/>
-			<target ref="id41"/>
-			<label kind="select" x="-629" y="-569">i : int[0,1]</label>
-			<label kind="guard" x="-646" y="-586">moveTimer==speed</label>
-			<label kind="assignment" x="-603" y="-552">move(i)</label>
-			<nail x="-663" y="-527"/>
-			<nail x="-484" y="-527"/>
-		</transition>
-		<transition id="id62">
 			<source ref="id39"/>
 			<target ref="id40"/>
-			<label kind="synchronisation" x="-1003" y="-518">enemySpawning[enemyId]?</label>
-			<label kind="assignment" x="-952" y="-484">initEnemy()</label>
+			<label kind="guard" x="-331" y="-501">isMainTower(pos)</label>
+			<label kind="synchronisation" x="-348" y="-467">towerAttacking[type]!</label>
+		</transition>
+		<transition id="id60">
+			<source ref="id38"/>
+			<target ref="id39"/>
+			<label kind="select" x="-621" y="-552">i : int[0,1]</label>
+			<label kind="guard" x="-638" y="-569">moveTimer==speed</label>
+			<label kind="assignment" x="-595" y="-535">move(i)</label>
+			<nail x="-646" y="-510"/>
+			<nail x="-476" y="-510"/>
+		</transition>
+		<transition id="id61">
+			<source ref="id37"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-986" y="-501">enemySpawning[enemyId]?</label>
+			<label kind="assignment" x="-935" y="-467">initEnemy()</label>
 		</transition>
 	</template>
-	<system>typedef int[0, (NUM_TURRETS - 1) &gt;? 0] turretId_t;                       //bounded integer type with values [1..turretNumber]
+	<system>typedef int[0, (NUM_TURRETS - 1) &gt;? 0] turretId_t;                //bounded integer type with values [1..turretNumber]
 TurretProcess(const turretId_t id) = TurretTemplate(id);          //template TurretProcess with argument id
 
 typedef int[0, NUM_ENEMIES - 1] enemyId_t;                        //bounded integer type with values [1..enemyNumber]
 EnemyProcess(const enemyId_t id) = EnemyTemplate(id);             //template EnemyProcess with argument id
 
 //processes that compose the system
-system GameController, MainTower, TurretProcess, EnemyProcess;    //instantiate TurretProcess(1)..TurretProcess(turretNumber), EnemyProcess(1)..EnemyProcess(enemyNumber) by filling the constant values from turretId_t, enemyId_t range
+system GameController, MainTower, EnemyProcess;                   //instantiate EnemyProcess(1)..EnemyProcess(enemyNumber) by filling the constant values from enemyId_t range
+
+//system GameController, MainTower, TurretProcess, EnemyProcess;    //instantiate TurretProcess(1)..TurretProcess(turretNumber), EnemyProcess(1)..EnemyProcess(enemyNumber) by filling the constant values from turretId_t, enemyId_t range
 
 </system>
 	<queries>
 		<option key="--diagnostic" value="2"/>
 		<query>
-			<formula>A[] (deadlock imply (gameWon or gameOver))</formula>
+			<formula>A[] (deadlock imply (GameController.Won or GameController.Lost))</formula>
 			<comment>The system never reaches a deadlock state</comment>
-		</query>
-		<query>
-			<formula>A&lt;&gt; forall(i : enemyId_t) (EnemyProcess(i).Left_Map or EnemyProcess(i).Dead or EnemyProcess(i).End)</formula>
-			<comment>Eventually, all enemies either attack the Main Tower or leave the map</comment>
-			<result outcome="failure" type="quality" timestamp="2025-04-27 01:46:05 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 21:37:06 +0200">
 				<option key="--diagnostic" value="2"/>
 			</result>
 		</query>
 		<query>
-			<formula>A&lt;&gt; forall(i : enemyId_t) ((enemies[i].type == CIRCLE and isMainTower(enemies[i].pos)) imply ((GameController.gameTimer - enemies[i].spawnTime) &lt;= (26  * CIRCLE_SPEED)))</formula>
+			<formula>A&lt;&gt; forall(i : enemyId_t) (EnemyProcess(i).Left_Map or EnemyProcess(i).End)</formula>
+			<comment>Eventually, all enemies either attack the Main Tower or leave the map</comment>
+			<result outcome="success" type="quality" timestamp="2025-04-27 21:37:08 +0200">
+				<option key="--diagnostic" value="2"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] forall(i : enemyId_t) ((EnemyProcess(i).Moving and EnemyProcess(i).type == CIRCLE) imply ((GameController.gameTimer - enemies[i].spawnTime) &lt; (26  * CIRCLE_SPEED)))</formula>
 			<comment>All Circles reach the tower or exit within 26 (total path length) * CIRCLE_SPEED time units</comment>
+			<result outcome="success" type="quality" timestamp="2025-04-27 21:37:10 +0200">
+				<option key="--diagnostic" value="2"/>
+			</result>
 		</query>
 		<query>
-			<formula>A&lt;&gt; forall(i : enemyId_t) ((enemies[i].type == SQUARE and isMainTower(enemies[i].pos)) imply ((GameController.gameTimer - enemies[i].spawnTime) &lt;= (26  * SQUARE_SPEED)))</formula>
+			<formula>A[] forall(i : enemyId_t) ((EnemyProcess(i).Moving and EnemyProcess(i).type == SQUARE) imply ((GameController.gameTimer - enemies[i].spawnTime) &lt; (26  * SQUARE_SPEED)))</formula>
 			<comment>All Squares reach the tower or exit within 26 (total path length) * SQUARE_SPEED time units</comment>
+			<result outcome="success" type="quality" timestamp="2025-04-27 21:37:12 +0200">
+				<option key="--diagnostic" value="2"/>
+			</result>
 		</query>
 		<query>
-			<formula>A[] forall(i : enemyId_t) (EnemyProcess(i).Moving imply isPath(enemies[i].pos))</formula>
+			<formula>A[] forall(i : enemyId_t) isPath(EnemyProcess(i).pos)</formula>
 			<comment>Enemies are always either on a path or at the Main Tower</comment>
-		</query>
-		<query>
-			<formula/>
-			<comment/>
-		</query>
-		<query>
-			<formula>A[] (gameOver &amp;&amp; deadlock) imply (enemiesDefeated == NUM_ENEMIES || mainTowerLife &lt;= 0)</formula>
-			<comment/>
-		</query>
-		<query>
-			<formula>A[] ((mainTowerLife &lt;= 0) imply gameOver)</formula>
-			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-04-27 21:37:13 +0200">
+				<option key="--diagnostic" value="2"/>
+			</result>
 		</query>
 	</queries>
 </nta>
