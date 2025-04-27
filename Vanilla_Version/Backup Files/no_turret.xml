@@ -262,7 +262,7 @@ system gameController, EnemyProcess;</system>
 		<query>
 			<formula>A[] (forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; EnemyProcess(i).Moving) imply EnemyProcess(i).spawnTime&lt;=26*CIRCLE_SPEED))</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-04-27 11:32:03 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-27 11:58:41 +0200">
 			</result>
 		</query>
 		<query>
