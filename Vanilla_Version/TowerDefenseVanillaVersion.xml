@@ -103,7 +103,7 @@ const int NUM_SQUARES = 3;
 const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
 
 //Turret Wave Parameters (VANILLA VERSION)
-const int[0, TURRETS_POS_LEN] NUM_TURRETS = 0;
+const int[0, TURRETS_POS_LEN] NUM_TURRETS = 7;
 const TurretType TURRET_TYPES[TURRETS_POS_LEN] = {
     BASIC, CANNON, CANNON, CANNON, CANNON, SNIPER, SNIPER
 };
@@ -205,8 +205,9 @@ bool isPath(Coordinate pos){
 		</transition>
 		<transition id="id5">
 			<source ref="id1"/>
-			<target ref="id2"/>
-			<label kind="guard" x="68" y="-59">mainTowerLife&lt;=0</label>
+			<target ref="id0"/>
+			<label kind="guard" x="-475" y="-195">mainTowerLife&lt;=0</label>
+			<nail x="-314" y="-221"/>
 		</transition>
 		<transition id="id6">
 			<source ref="id0"/>
@@ -361,7 +362,7 @@ squareSpawnTimer==SQUARE_SPAWN_TIME</label>
 			<source ref="id9"/>
 			<target ref="id8"/>
 			<label kind="guard" x="-52" y="-382">mainTowerLife&lt;=0</label>
-			<label kind="synchronisation" x="-51" y="-365">endSignal!</label>
+			<label kind="synchronisation" x="-34" y="-365">endSignal!</label>
 			<label kind="assignment" x="-51" y="-348">gameOver=true</label>
 			<nail x="101" y="-408"/>
 		</transition>
@@ -369,7 +370,7 @@ squareSpawnTimer==SQUARE_SPAWN_TIME</label>
 			<source ref="id9"/>
 			<target ref="id7"/>
 			<label kind="guard" x="246" y="-382">activeEnemies==0 &amp;&amp; mainTowerLife&gt;0</label>
-			<label kind="synchronisation" x="246" y="-365">endSignal!</label>
+			<label kind="synchronisation" x="255" y="-365">endSignal!</label>
 			<label kind="assignment" x="246" y="-348">gameWon=true</label>
 			<nail x="238" y="-408"/>
 		</transition>
@@ -593,16 +594,8 @@ void deactiveEnemy() {
 			<name x="-383" y="-263">Hit</name>
 			<committed/>
 		</location>
-		<location id="id44" x="-408" y="-612">
-			<name x="-425" y="-654">End</name>
-		</location>
 		<init ref="id37"/>
-		<transition id="id45">
-			<source ref="id39"/>
-			<target ref="id44"/>
-			<label kind="synchronisation" x="-399" y="-595">endSignal?</label>
-		</transition>
-		<transition id="id46">
+		<transition id="id44">
 			<source ref="id38"/>
 			<target ref="id43"/>
 			<label kind="synchronisation" x="-705" y="-196">enemyHit[enemyId][SNIPER]?</label>
@@ -611,7 +604,7 @@ void deactiveEnemy() {
 			<nail x="-782" y="-170"/>
 			<nail x="-442" y="-170"/>
 		</transition>
-		<transition id="id47">
+		<transition id="id45">
 			<source ref="id38"/>
 			<target ref="id43"/>
 			<label kind="synchronisation" x="-705" y="-263">enemyHit[enemyId][CANNON]?</label>
@@ -619,7 +612,7 @@ void deactiveEnemy() {
 			<nail x="-748" y="-357"/>
 			<nail x="-748" y="-238"/>
 		</transition>
-		<transition id="id48">
+		<transition id="id46">
 			<source ref="id43"/>
 			<target ref="id40"/>
 			<label kind="guard" x="-323" y="-399">health&gt;0 &amp;&amp;
@@ -627,7 +620,7 @@ isMainTower(pos)</label>
 			<nail x="-374" y="-357"/>
 			<nail x="-136" y="-357"/>
 		</transition>
-		<transition id="id49">
+		<transition id="id47">
 			<source ref="id40"/>
 			<target ref="id43"/>
 			<label kind="synchronisation" x="-348" y="-263">enemyHit[enemyId][CANNON]?</label>
@@ -635,7 +628,7 @@ isMainTower(pos)</label>
 			<nail x="-68" y="-357"/>
 			<nail x="-68" y="-238"/>
 		</transition>
-		<transition id="id50">
+		<transition id="id48">
 			<source ref="id40"/>
 			<target ref="id43"/>
 			<label kind="synchronisation" x="-348" y="-196">enemyHit[enemyId][SNIPER]?</label>
@@ -644,19 +637,7 @@ isMainTower(pos)</label>
 			<nail x="-34" y="-170"/>
 			<nail x="-374" y="-170"/>
 		</transition>
-		<transition id="id51">
-			<source ref="id38"/>
-			<target ref="id44"/>
-			<label kind="synchronisation" x="-705" y="-595">endSignal?</label>
-			<nail x="-714" y="-612"/>
-		</transition>
-		<transition id="id52">
-			<source ref="id40"/>
-			<target ref="id44"/>
-			<label kind="synchronisation" x="-93" y="-595">endSignal?</label>
-			<nail x="-102" y="-612"/>
-		</transition>
-		<transition id="id53">
+		<transition id="id49">
 			<source ref="id40"/>
 			<target ref="id43"/>
 			<label kind="synchronisation" x="-348" y="-332">enemyHit[enemyId][BASIC]?</label>
@@ -664,14 +645,14 @@ isMainTower(pos)</label>
 			<nail x="-102" y="-306"/>
 			<nail x="-374" y="-306"/>
 		</transition>
-		<transition id="id54">
+		<transition id="id50">
 			<source ref="id43"/>
 			<target ref="id41"/>
 			<label kind="guard" x="-280" y="-127">health&lt;=0</label>
 			<label kind="assignment" x="-306" y="-102">deactiveEnemy()</label>
 			<nail x="-408" y="-102"/>
 		</transition>
-		<transition id="id55">
+		<transition id="id51">
 			<source ref="id43"/>
 			<target ref="id38"/>
 			<label kind="guard" x="-637" y="-399">health&gt;0 &amp;&amp;
@@ -679,7 +660,7 @@ isMainTower(pos)</label>
 			<nail x="-442" y="-357"/>
 			<nail x="-680" y="-357"/>
 		</transition>
-		<transition id="id56">
+		<transition id="id52">
 			<source ref="id38"/>
 			<target ref="id43"/>
 			<label kind="synchronisation" x="-705" y="-332">enemyHit[enemyId][BASIC]?</label>
@@ -687,26 +668,26 @@ isMainTower(pos)</label>
 			<nail x="-714" y="-306"/>
 			<nail x="-442" y="-306"/>
 		</transition>
-		<transition id="id57">
+		<transition id="id53">
 			<source ref="id40"/>
 			<target ref="id42"/>
 			<label kind="guard" x="-17" y="-501">moveTimer==speed</label>
 			<label kind="assignment" x="-17" y="-476">deactiveEnemy()</label>
 		</transition>
-		<transition id="id58">
+		<transition id="id54">
 			<source ref="id39"/>
 			<target ref="id38"/>
 			<label kind="guard" x="-637" y="-467">!isMainTower(pos)</label>
 			<nail x="-476" y="-442"/>
 			<nail x="-646" y="-442"/>
 		</transition>
-		<transition id="id59">
+		<transition id="id55">
 			<source ref="id39"/>
 			<target ref="id40"/>
 			<label kind="guard" x="-331" y="-501">isMainTower(pos)</label>
 			<label kind="synchronisation" x="-348" y="-467">towerAttacking[type]!</label>
 		</transition>
-		<transition id="id60">
+		<transition id="id56">
 			<source ref="id38"/>
 			<target ref="id39"/>
 			<label kind="select" x="-621" y="-552">i : int[0,1]</label>
@@ -715,11 +696,12 @@ isMainTower(pos)</label>
 			<nail x="-646" y="-510"/>
 			<nail x="-476" y="-510"/>
 		</transition>
-		<transition id="id61">
+		<transition id="id57">
 			<source ref="id37"/>
 			<target ref="id38"/>
 			<label kind="synchronisation" x="-986" y="-501">enemySpawning[enemyId]?</label>
-			<label kind="assignment" x="-935" y="-467">initEnemy()</label>
+			<label kind="assignment" x="-935" y="-467">initEnemy(),
+aliveTimer=0</label>
 		</transition>
 	</template>
 	<system>typedef int[0, (NUM_TURRETS - 1) &gt;? 0] turretId_t;                //bounded integer type with values [1..turretNumber]
@@ -729,7 +711,7 @@ typedef int[0, NUM_ENEMIES - 1] enemyId_t;                        //bounded inte
 EnemyProcess(const enemyId_t id) = EnemyTemplate(id);             //template EnemyProcess with argument id
 
 //processes that compose the system
-system GameController, MainTower, EnemyProcess;                   //instantiate EnemyProcess(1)..EnemyProcess(enemyNumber) by filling the constant values from enemyId_t range
+system GameController, MainTower, TurretProcess, EnemyProcess;        //instantiate EnemyProcess(1)..EnemyProcess(enemyNumber) by filling the constant values from enemyId_t range
 
 //system GameController, MainTower, TurretProcess, EnemyProcess;    //instantiate TurretProcess(1)..TurretProcess(turretNumber), EnemyProcess(1)..EnemyProcess(enemyNumber) by filling the constant values from turretId_t, enemyId_t range
 
@@ -767,7 +749,7 @@ system GameController, MainTower, EnemyProcess;                   //instantiate 
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(EnemyProcess(i).pos)</formula>
 			<comment>Enemies are always either on a path or at the Main Tower</comment>
-			<result outcome="success" type="quality" timestamp="2025-04-27 21:37:13 +0200">
+			<result outcome="success" type="quality" timestamp="2025-04-29 01:38:10 -0700">
 				<option key="--diagnostic" value="2"/>
 			</result>
 		</query>
