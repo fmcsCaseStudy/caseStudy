@@ -700,8 +700,7 @@ isMainTower(pos)</label>
 			<source ref="id37"/>
 			<target ref="id38"/>
 			<label kind="synchronisation" x="-986" y="-501">enemySpawning[enemyId]?</label>
-			<label kind="assignment" x="-935" y="-467">initEnemy(),
-aliveTimer=0</label>
+			<label kind="assignment" x="-935" y="-467">initEnemy()</label>
 		</transition>
 	</template>
 	<system>typedef int[0, (NUM_TURRETS - 1) &gt;? 0] turretId_t;                //bounded integer type with values [1..turretNumber]
