@@ -118,17 +118,25 @@ int findTarget(int turretId) {
     int minDistance = turrets[i].range;
     int d;
     for(i = 0; i &lt; NUM_ENEMIES; i++) {
-        d = distance(turrets[i].pos, enemies[j].pos);
+        d = distance(turrets[turretId].pos, enemies[i].pos);
         if(enemies[i].active &amp;&amp; (
             (d &lt; minDistance) ||
             (d == minDistance &amp;&amp; enemies[i].spawnTime &lt;=spawnTime) ||
-            (d == minDistance &amp;&amp; enemies[i].spawnTime &lt;=spawnTime &amp;&amp; enemies[i].type == SQUARE)) {
+            (d == minDistance &amp;&amp; enemies[i].spawnTime &lt;=spawnTime &amp;&amp; enemies[i].type == SQUARE))) {
             minDistance = d;
             targetEnemy = i;
             spawnTime = enemies[i].spawnTime;
         }
     }
     return targetEnemy;
+}
+
+void applyDamage(int enemyId, int turretId) {
+    turrets[turretId].ready = false;
+    enemies[enemyId].health = enemies[enemyId].health - turrets[turretId].damage;
+    if(enemies[enemyId].health &lt;= 0) {
+        enemies[enemyId].active = false;
+    }
 }
 </declaration>
 	<template>
@@ -297,14 +305,6 @@ void updatePos(int i) {
     isMainTower = enemies[enemyId].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[enemyId].pos.y==MAIN_TOWER_POS.y;
 }
 
-void applyDamage(int turretId) {
-    turrets[i].ready = false;
-    enemies[enemyId].health = enemies[enemyId].health - turrets[turretId].damage;
-    if(enemies[enemyId].health &lt;= 0) {
-        enemies[enemyId].active = false;
-    }
-}
-
 
 void checkTurret() {
     int j;
@@ -312,16 +312,18 @@ void checkTurret() {
     for(j = 0; j &lt; NUM_TURRETS; j++) {
         target = findTarget(j);
         if(target == enemyId) {
-            applyDamage(j);
+            applyDamage(enemyId, j);
             t[j] = true;
             syn = true;
+            turrets[j].ready = false;
         }
     }
+    last = 0;
 }
 
 void updateSyn() {
     int k;
-    for(k = last+1; k &lt; 7; k++) {
+    for(k = last + 1; k &lt; 7; k++) {
         if(t[k]) {
             last = k;
             t[k] = false;
@@ -375,7 +377,7 @@ void hitMain() {
 			<source ref="id15"/>
 			<target ref="id13"/>
 			<label kind="guard" x="59" y="-76">!isMainTower</label>
-			<label kind="assignment" x="59" y="-34">findTarget()</label>
+			<label kind="assignment" x="59" y="-34">checkTurret()</label>
 		</transition>
 		<transition id="id20">
 			<source ref="id14"/>
@@ -422,38 +424,63 @@ void setTrue() {
     turrets[turretId].ready = true;   
 }
 
+void checkEnemy() {
+    int target = findTarget(turretId);
+    if(target != -1) {
+        applyDamage(target, turretId);
+        fireTimer = 0;
+    }
+}
+
 
 
 </declaration>
-		<location id="id23" x="-782" y="0">
-			<name x="-792" y="-34">Not_Placed</name>
+		<location id="id23" x="-824" y="-229">
+			<name x="-834" y="-263">Not_Placed</name>
 		</location>
-		<location id="id24" x="-408" y="0">
-			<name x="-442" y="-51">Ready</name>
+		<location id="id24" x="-544" y="-34">
+			<name x="-554" y="-68">Firing</name>
+			<committed/>
 		</location>
-		<location id="id25" x="34" y="0">
-			<name x="8" y="-42">Reload</name>
-			<label kind="invariant" x="24" y="17">fireTimer &lt;= fireRate</label>
+		<location id="id25" x="-34" y="-42">
+			<name x="-44" y="-76">Reload</name>
+			<label kind="invariant" x="-119" y="51">fireTimer &lt;= fireRate</label>
+		</location>
+		<location id="id26" x="-544" y="204">
+			<name x="-554" y="170">Ready</name>
 		</location>
 		<init ref="id23"/>
-		<transition id="id26">
-			<source ref="id25"/>
-			<target ref="id24"/>
-			<label kind="guard" x="-136" y="127">fireTimer==fireRate</label>
-			<label kind="assignment" x="-221" y="153">setTrue()</label>
-			<nail x="-170" y="136"/>
-		</transition>
 		<transition id="id27">
 			<source ref="id24"/>
-			<target ref="id25"/>
-			<label kind="synchronisation" x="-390" y="-17">turretPositioning[turretId]?</label>
-			<label kind="assignment" x="-238" y="8">setFalse()</label>
+			<target ref="id26"/>
+			<label kind="guard" x="-450" y="161">turrets[turretId].ready</label>
+			<nail x="-442" y="110"/>
 		</transition>
 		<transition id="id28">
+			<source ref="id26"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-909" y="42">turretPositioning[turretId]?</label>
+			<nail x="-697" y="127"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id25"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-110" y="25">fireTimer==fireRate</label>
+			<label kind="assignment" x="-93" y="76">checkEnemy()</label>
+			<nail x="-110" y="25"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id24"/>
+			<target ref="id25"/>
+			<label kind="guard" x="-289" y="-229">!turrets[turretId].ready</label>
+			<label kind="assignment" x="-391" y="-136">fireTimer = 0</label>
+			<nail x="-153" y="-178"/>
+		</transition>
+		<transition id="id31">
 			<source ref="id23"/>
 			<target ref="id24"/>
-			<label kind="synchronisation" x="-731" y="-25">turretPositioning[turretId]?</label>
-			<label kind="assignment" x="-697" y="0">setTurretStats()</label>
+			<label kind="synchronisation" x="-671" y="-204">turretPositioning[turretId]?</label>
+			<label kind="assignment" x="-612" y="-170">setTurretStats()</label>
 		</transition>
 	</template>
 	<system>g = SpawnController();
