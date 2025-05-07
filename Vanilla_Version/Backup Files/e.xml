@@ -404,6 +404,18 @@ void hitMain() {
 		<declaration>int fireRate;
 clock fireTimer;  
 
+
+void checkEnemy() {
+    int target = findTarget(turretId);
+    turrets[turretId].ready = true;  
+    if(target != -1) {
+        applyDamage(target, turretId);
+        turrets[turretId].ready = false; 
+        fireTimer = 0;
+        
+    }
+}
+
 void setTurretStats() {
     if (TURRETS_TYPE[turretId] == BASIC) {
         fireRate = BASIC_FIRE_SPEED;
@@ -412,25 +424,9 @@ void setTurretStats() {
     } else {
         fireRate = SNIPER_FIRE_SPEED;
     }
-    fireTimer = 0;
+    checkEnemy();
 }
 
-void setFalse() {
-    turrets[turretId].ready = false;  
-    fireTimer = 0; 
-}
-
-void setTrue() {
-    turrets[turretId].ready = true;   
-}
-
-void checkEnemy() {
-    int target = findTarget(turretId);
-    if(target != -1) {
-        applyDamage(target, turretId);
-        fireTimer = 0;
-    }
-}
 
 
 
@@ -473,7 +469,7 @@ void checkEnemy() {
 			<source ref="id24"/>
 			<target ref="id25"/>
 			<label kind="guard" x="-289" y="-229">!turrets[turretId].ready</label>
-			<label kind="assignment" x="-391" y="-136">fireTimer = 0</label>
+			<label kind="assignment" x="-229" y="-272">fireTimer = 0</label>
 			<nail x="-153" y="-178"/>
 		</transition>
 		<transition id="id31">
