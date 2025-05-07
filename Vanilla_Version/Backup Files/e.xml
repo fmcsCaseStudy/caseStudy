@@ -100,8 +100,36 @@ bool isPath(Coordinate pos){
     return false;        
 }
 
+int distance(Coordinate pos1, Coordinate pos2) {
+    int x = abs(pos1.x-pos2.x);
+    int y = abs(pos1.y-pos2.y);
+    if(x &gt; y){
+        return x;
+    }
+    else{ 
+        return y;
+    }
+}
 
-
+int findTarget(int turretId) {
+    int i;
+    int targetEnemy = -1;
+    int spawnTime = -1;
+    int minDistance = turrets[i].range;
+    int d;
+    for(i = 0; i &lt; NUM_ENEMIES; i++) {
+        d = distance(turrets[i].pos, enemies[j].pos);
+        if(enemies[i].active &amp;&amp; (
+            (d &lt; minDistance) ||
+            (d == minDistance &amp;&amp; enemies[i].spawnTime &lt;=spawnTime) ||
+            (d == minDistance &amp;&amp; enemies[i].spawnTime &lt;=spawnTime &amp;&amp; enemies[i].type == SQUARE)) {
+            minDistance = d;
+            targetEnemy = i;
+            spawnTime = enemies[i].spawnTime;
+        }
+    }
+    return targetEnemy;
+}
 </declaration>
 	<template>
 		<name x="5" y="5">SpawnController</name>
@@ -235,12 +263,6 @@ bool t[7];
 int last;
 bool syn;
 
-int distance(Coordinate pos1, Coordinate pos2) {
-    return abs(pos1.x - pos2.x) + abs(pos1.y - pos2.y);
-}
-
-
-
 void initEnemy() {
     if (enemies[enemyId].type == CIRCLE) {
         speed = CIRCLE_SPEED;
@@ -276,51 +298,23 @@ void updatePos(int i) {
 }
 
 void applyDamage(int turretId) {
+    turrets[i].ready = false;
     enemies[enemyId].health = enemies[enemyId].health - turrets[turretId].damage;
     if(enemies[enemyId].health &lt;= 0) {
         enemies[enemyId].active = false;
     }
 }
-bool inRange(Coordinate turretPos, int range, Coordinate enemyPos) {
-    return distance(turretPos, enemyPos) &lt;= range;
-}
 
-void findTarget() {
-    int i;
+
+void checkTurret() {
     int j;
-    int d;
-    int targetEnemy;
-    int minDistance;
-    int spawnTime;
-    int k;
-    syn = false;
-    for(k = 0; k &lt; 7; k++) {
-        t[k] = false;
-    }
-    for(i = 0; i &lt; NUM_TURRETS; i++) {
-        targetEnemy = -1;
-        minDistance = turrets[i].range*2;
-        spawnTime = -1;
-        if(turrets[i].ready) {
-            for(j = 0; j &lt; NUM_ENEMIES; j++) {
-                d = distance(turrets[i].pos, enemies[j].pos);
-                if(enemies[j].active &amp;&amp; (
-                    (d &lt; minDistance) ||
-                    (d == minDistance &amp;&amp; enemies[j].spawnTime &gt;= spawnTime) ||
-                    (d == minDistance &amp;&amp; enemies[j].spawnTime &gt;= spawnTime &amp;&amp; enemies[j].type == SQUARE)
-                    )) {
-                    minDistance = d;
-                    spawnTime = enemies[j].spawnTime;
-                    targetEnemy = j;
-                }
-            }
-            if(targetEnemy == enemyId &amp;&amp; d &lt;= turrets[j].range) {
-                applyDamage(i);
-                turrets[i].ready = false;
-                t[i] = true;
-                last = i;  
-                syn = true;
-            }
+    int target;
+    for(j = 0; j &lt; NUM_TURRETS; j++) {
+        target = findTarget(j);
+        if(target == enemyId) {
+            applyDamage(j);
+            t[j] = true;
+            syn = true;
         }
     }
 }
@@ -481,19 +475,19 @@ system g, EnemyProcess, TurretProcess0, TurretProcess1,TurretProcess2,TurretProc
 			<formula>A[] (deadlock imply forall (i : enemyId_t) EnemyProcess(i).End)
 </formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-06 18:06:30 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-07 16:28:09 +0200">
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[i].pos.y==MAIN_TOWER_POS.y)</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-05 17:51:18 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-07 16:37:29 +0200">
 			</result>
 		</query>
 		<query>
 			<formula>A[] (forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; EnemyProcess(i).Moving) imply EnemyProcess(i).spawnTimer&lt;=26*SQUARE_SPEED))</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-05 17:51:22 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-07 16:39:32 +0200">
 			</result>
 		</query>
 		<query>
@@ -505,7 +499,7 @@ system g, EnemyProcess, TurretProcess0, TurretProcess1,TurretProcess2,TurretProc
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-05 17:51:24 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-07 16:41:52 +0200">
 			</result>
 		</query>
 	</queries>
