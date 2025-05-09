@@ -13,7 +13,6 @@ const TurretType BASIC  =  0;
 const TurretType CANNON =  1;
 const TurretType SNIPER =  2;
 
-//struct
 typedef struct {
     int x;
     int y;
@@ -22,7 +21,7 @@ const Coordinate SPAWN_POS = { 0, 0};
 const Coordinate MAIN_TOWER_POS = { 15, 4};
 
 typedef struct {
-    bool active;
+    bool active; // To check if it is alive or not
     int health;
     EnemyType type;
     Coordinate pos;
@@ -31,7 +30,7 @@ typedef struct {
 
 typedef struct {
     Coordinate pos;
-    bool ready;
+    bool ready; // To check if it is ready to fire
     int damage;
     int range;
 } Turret;
@@ -66,28 +65,62 @@ const int SNIPER_RANGE      =  4;
 const int SNIPER_FIRE_SPEED = 20;
 const int SNIPER_DAMAGE     =  8;
 
-// game configuration
-
 const int MAX_TURRETS = 7; 
 
+// game configuration
+
+//No turret Version
+/*
+const int NUM_CIRCLES = 3;
+const int NUM_SQUARES = 3;
+const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
+const int NUM_TURRETS = 0;
+const int TURRETS_TYPE[MAX_TURRETS] = {NONE, NONE, NONE, NONE, NONE, NONE, NONE}; //set here the type, replace none to remove turrets
+const Coordinate TURRETS_POS[MAX_TURRETS] = {{ -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }}; // set here the position
+int mainTowerLife = 10; //set the life point
+
+*/
+//turret Version
+/*
 const int NUM_CIRCLES = 3;
 const int NUM_SQUARES = 3;
 const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
 const int NUM_TURRETS = 7;
-const int TURRETS_TYPE[MAX_TURRETS] = {BASIC, BASIC, BASIC, BASIC, BASIC, BASIC, BASIC}; //set here the type, replace none to remove turrets
+const int TURRETS_TYPE[MAX_TURRETS] = {SNIPER, BASIC, CANNON, CANNON, SNIPER, CANNON, CANNON}; //set here the type, replace none to remove turrets
+const Coordinate TURRETS_POS[MAX_TURRETS] = {{ 2, 3 }, { 5, 5 }, { 8, 2 }, { 8, 6 }, { 11, 5 }, { 14, 2 }, { 14, 6 }}; // set here the position
+int mainTowerLife = 10; //set the life point
+*/
+
+
+// 4 BASIC losing configuration
+/*
+const int NUM_CIRCLES = 3;
+const int NUM_SQUARES = 3;
+const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
+const int NUM_TURRETS = 4;
+const int TURRETS_TYPE[MAX_TURRETS] = {BASIC, BASIC, BASIC, BASIC, NONE, NONE, NONE}; //set here the type, replace none to remove turrets
+const Coordinate TURRETS_POS[MAX_TURRETS] = {{ 2, 3 }, { 5, 5 }, { 8, 2 }, { 8, 6 }, { 11, 5 }, { 14, 2 }, { 14, 6 }}; // set here the position
+int mainTowerLife = 10; //set the life point
+*/
+
+// 4 SNIPER winning configuration
+const int NUM_CIRCLES = 3;
+const int NUM_SQUARES = 3;
+const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
+const int NUM_TURRETS = 4;
+const int TURRETS_TYPE[MAX_TURRETS] = {SNIPER, SNIPER, SNIPER, SNIPER, NONE, NONE, NONE}; //set here the type, replace none to remove turrets
 const Coordinate TURRETS_POS[MAX_TURRETS] = {{ 2, 3 }, { 5, 5 }, { 8, 2 }, { 8, 6 }, { 11, 5 }, { 14, 2 }, { 14, 6 }}; // set here the position
 int mainTowerLife = 10; //set the life point
 
-
 //global state
 Enemy enemies[NUM_ENEMIES];
-Turret turrets[7];
+Turret turrets[MAX_TURRETS];
 //global channel
 chan enemySpawning[NUM_ENEMIES]; // channel to place enemy
 chan turretPositioning[MAX_TURRETS]; // channel to place turrets
 urgent chan turretAwake[MAX_TURRETS]; //channel to wake turrets
 
-
+//Used to check if the enemy is still on right path
 bool isPath(Coordinate pos){
     //Vertical segments
     if(pos.x ==  0 &amp;&amp; 0&lt;=pos.y &amp;&amp; pos.y&lt;=4) return true;
@@ -103,7 +136,7 @@ bool isPath(Coordinate pos){
 
     return false;        
 }
-
+// Chebyshev distance
 int distance(Coordinate pos1, Coordinate pos2) {
     int x = abs(pos1.x-pos2.x);
     int y = abs(pos1.y-pos2.y);
@@ -114,7 +147,7 @@ int distance(Coordinate pos1, Coordinate pos2) {
         return y;
     }
 }
-
+// find the target of turretId, return -1 if no target found
 int findTarget(int turretId) {
     int i;
     int targetEnemy = -1;
@@ -134,7 +167,7 @@ int findTarget(int turretId) {
     }
     return targetEnemy;
 }
-
+// apply damage to the enemyId firing from turretId
 void applyDamage(int enemyId, int turretId) {
     turrets[turretId].ready = false;
     enemies[enemyId].health = enemies[enemyId].health - turrets[turretId].damage;
@@ -194,12 +227,14 @@ void spawnEnemy(EnemyType type) {
 }</declaration>
 		<location id="id0" x="-85" y="0">
 			<name x="-127" y="17">Spawn_Turret</name>
+			<label kind="comments" x="-187" y="68">Initialize all turrets</label>
 			<committed/>
 		</location>
 		<location id="id1" x="340" y="0">
 			<name x="195" y="8">Spawn_Enemy</name>
 			<label kind="invariant" x="8" y="-255">(circlesSpawned==NUM_CIRCLES || circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
 (squaresSpawned==NUM_SQUARES || squareSpawnTimer&lt;=SQUARE_SPAWN_TIME)</label>
+			<label kind="comments" x="-178" y="195">Spawn enemies according to the NUM_CIRCLE and NUM_SQUARE, when finished go to End_Spawn state</label>
 		</location>
 		<location id="id2" x="680" y="0">
 			<name x="705" y="-25">End_Spawn</name>
@@ -348,6 +383,7 @@ void hitMain() {
 }</declaration>
 		<location id="id12" x="-204" y="145">
 			<name x="-272" y="86">Not_Spawned</name>
+			<label kind="comments" x="-399" y="212">When enemy spawned, can immediately hitted by turret, so enemy will check if some turret can shoot</label>
 		</location>
 		<location id="id13" x="-204" y="-195">
 			<name x="-214" y="-229">Hit</name>
@@ -359,6 +395,7 @@ void hitMain() {
 		</location>
 		<location id="id15" x="408" y="145">
 			<name x="398" y="111">Moving</name>
+			<label kind="comments" x="398" y="204">Use i to do a non-deterministic move when needed, and check if the next position is MainTower</label>
 			<committed/>
 		</location>
 		<location id="id16" x="408" y="281">
@@ -451,6 +488,8 @@ void setTurretStats() {
 		</location>
 		<location id="id26" x="-544" y="-34">
 			<name x="-554" y="-68">Firing</name>
+			<label kind="comments" x="-901" y="272">When the turrets is placed can immediatly go into ready state and wait the enemy signal to wake up
+Check if there is enemy to shoot, if none wait the wake signal</label>
 			<committed/>
 		</location>
 		<location id="id27" x="-34" y="-42">
@@ -477,7 +516,7 @@ void setTurretStats() {
 		<transition id="id31">
 			<source ref="id27"/>
 			<target ref="id26"/>
-			<label kind="guard" x="-110" y="25">fireTimer==fireRate</label>
+			<label kind="guard" x="-119" y="110">fireTimer==fireRate</label>
 			<label kind="assignment" x="-93" y="76">checkEnemy()</label>
 			<nail x="-110" y="25"/>
 		</transition>
@@ -496,51 +535,92 @@ void setTurretStats() {
 	</template>
 	<system>g = SpawnController();
 
+/*
 typedef int[0, NUM_ENEMIES - 1] enemyId_t;                         //bounded integer type with values [1..enemyNumber]
 EnemyProcess(const enemyId_t id) = EnemyTemplate(id); 
-TurretProcess0 = TurretTemplate(0);
-TurretProcess1 = TurretTemplate(1);
-TurretProcess2 = TurretTemplate(2);
-TurretProcess3 = TurretTemplate(3);
-TurretProcess4 = TurretTemplate(4);
-TurretProcess5 = TurretTemplate(5);
-TurretProcess6 = TurretTemplate(6);
-system g, EnemyProcess, TurretProcess0, TurretProcess1,TurretProcess2,TurretProcess3,TurretProcess4,TurretProcess5,TurretProcess6;
-//system g, EnemyProcess;
+system g, EnemyProcess;
+*/
+
+typedef int[0, NUM_ENEMIES - 1] enemyId_t;                         //bounded integer type with values [1..enemyNumber]
+EnemyProcess(const enemyId_t id) = EnemyTemplate(id); 
+typedef int[0, NUM_TURRETS - 1] turretId_t;     
+TurretProcess(const turretId_t id) = TurretTemplate(id);
+system g, EnemyProcess, TurretProcess;
 </system>
 	<queries>
 		<option key="--diagnostic" value="1"/>
 		<query>
-			<formula>A[] (deadlock imply forall (i : enemyId_t) EnemyProcess(i).End)
+			<formula>A[] (deadlock imply (forall (i : enemyId_t) EnemyProcess(i).End) &amp;&amp; g.End_Spawn)
 </formula>
-			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-08 18:50:29 +0200">
+			<comment>The game never reaches a deadlock state.
+If game reaches a deadlock, that mean every enemy has arrived into MainTower and SpawnController is in End_Spawn</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:26:30 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) (enemies[i].pos.x==MAIN_TOWER_POS.x &amp;&amp; enemies[i].pos.y==MAIN_TOWER_POS.y)</formula>
-			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-08 18:50:40 +0200">
+			<comment> All enemies can reach the Main Tower
+Eventually the position of enemy will become MainTower</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:23:39 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] (forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; EnemyProcess(i).Moving) imply EnemyProcess(i).spawnTimer&lt;=25*SQUARE_SPEED))</formula>
-			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-08 18:49:46 +0200">
+			<comment>Circles reach the Main Tower in no more than n · c time units, where n is
+ the length of the longest path from the start of the Map to the Main Tower,
+ and c is the speed of the Circles
+For all possible path, the SpawnTimer that start count from enemy spawn, is always &lt;=25. There are 26 cells, but enemy start at 0,0 so need 25 time unit*speed</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:23:41 +0200">
+				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] (forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; EnemyProcess(i).Moving) imply EnemyProcess(i).spawnTimer&lt;=25*CIRCLE_SPEED))</formula>
-			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-08 18:43:38 +0200">
+			<comment>Squares reach the Main Tower in no more than n · c time units, where n is
+ the length of the longest path from the start of the Map to the Main Tower,
+ and c is the speed of the Squares
+For all possible path, the SpawnTimer that start count from enemy spawn, is always &lt;=25. There are 26 cells, but enemy start at 0,0 so need 25 time unit*speed</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:23:42 +0200">
+				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
+			<comment>All enemies never leave the red path.</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:23:44 +0200">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula/>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2025-05-08 18:43:27 +0200">
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>A[] ((forall (i : enemyId_t) EnemyProcess(i).End) &amp;&amp; g.End_Spawn) imply mainTowerLife &gt; 0</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:47:43 +0200">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] (deadlock imply (forall (i : enemyId_t) EnemyProcess(i).End) &amp;&amp; g.End_Spawn &amp;&amp; (forall (j : turretId_t) TurretProcess(j).Ready))</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-05-09 14:44:18 +0200">
+				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 	</queries>
