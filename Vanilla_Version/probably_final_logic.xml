@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
 <nta>
-	<declaration>clock gameTimer;
+	<declaration>clock gameTimer;    //Just for debug
 
 /*----------------------------------------------------------------------------------------------------*/
 //Constants and declarations related to the map of the game
@@ -140,7 +140,7 @@ const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 3;
+const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 1;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
@@ -503,6 +503,7 @@ void selectTurretToAwaken() {
             turretsToAwaken[t] = false;
             turretToAwaken = t;
             counter--;
+            return;
         }
     }
 }</declaration>
@@ -697,35 +698,35 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End))
 </formula>
 			<comment>(Property I)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:29 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:06 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) isMainTower(enemies[i].pos)</formula>
 			<comment>(Property II)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:34 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:11 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * CIRCLE_SPEED)))</formula>
 			<comment>(Property III)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:38 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:14 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * SQUARE_SPEED)))</formula>
 			<comment>(Property IV)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:42 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:18 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
 			<comment>(Property V)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:45 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:22 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -737,7 +738,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End &amp;&amp; forall(j : turretId_t) TurretProcess(j).Ready))
 </formula>
 			<comment>(Property VII)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:50:51 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:23:41 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -745,7 +746,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] deadlock imply ControllerProcess.Won</formula>
 			<comment>(Properties VI / VIII)
 Query used to check if the selected configuration is a winning configuration. (THE RESULT MUST BE OPPOSITE TO NEXT QUERY)</comment>
-			<result outcome="failure" type="quality" timestamp="2025-05-13 16:51:11 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-13 23:23:43 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -753,7 +754,7 @@ Query used to check if the selected configuration is a winning configuration. (T
 			<formula>A[] deadlock imply ControllerProcess.Lost</formula>
 			<comment>(Properties VI / VIII)
 Query used to check if the selected configuration is a losing configuration. (THE RESULT MUST BE OPPOSITE TO PREVIOUS QUERY)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 16:51:25 +0200">
+			<result outcome="failure" type="quality" timestamp="2025-05-13 23:24:04 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
