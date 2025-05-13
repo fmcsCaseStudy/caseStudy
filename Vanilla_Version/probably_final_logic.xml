@@ -568,7 +568,7 @@ void findTarget() {
         shoot(target);
     }
     else {
-        turrets[turretId].ready = true;
+        turrets[turretId].ready = true;ok
     }
 }
 </declaration>
@@ -642,35 +642,35 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 		<query>
 			<formula>A[] (deadlock imply (ControllerProcess.End_Spawn &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End))
 </formula>
-			<comment/>
+			<comment>Property I</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-12 23:12:11 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) isMainTower(enemies[i].pos)</formula>
-			<comment/>
+			<comment>Property II</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-12 22:08:54 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * CIRCLE_SPEED)))</formula>
-			<comment/>
+			<comment>Property III</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-12 22:09:00 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * SQUARE_SPEED)))</formula>
-			<comment/>
+			<comment>Property IV</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-12 22:09:06 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
-			<comment/>
+			<comment>Property V</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-12 22:09:12 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
@@ -680,9 +680,16 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<comment/>
 		</query>
 		<query>
+			<formula>A[] ((forall (i : enemyId_t) EnemyProcess(i).End) &amp;&amp; ControllerProcess.End_Spawn) imply mainTowerLife &gt; 0</formula>
+			<comment>Property VII,Property VIII, use different turret configuration to check winning or losing</comment>
+			<result outcome="failure" type="quality" timestamp="2025-05-13 11:27:00 +0200">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
 			<formula>A[] (deadlock imply (ControllerProcess.End_Spawn &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End &amp;&amp; forall(j : turretId_t) TurretProcess(j).Ready))
 </formula>
-			<comment/>
+			<comment>Property VII</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-12 23:11:51 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
