@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
 <nta>
-	<declaration>/*----------------------------------------------------------------------------------------------------*/
+	<declaration>clock gameTimer;
+
+/*----------------------------------------------------------------------------------------------------*/
 //Constants and declarations related to the map of the game
 typedef struct {
     int x;
@@ -109,13 +111,13 @@ const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
         { SNIPER, BASIC, CANNON, CANNON, SNIPER, CANNON, CANNON },
         { { 2, 3 }, { 5, 5 }, { 8, 2 }, { 8, 6 }, { 11, 5 }, { 14, 2 }, { 14, 6 } }
     },
-    //Custom 1 (PROPERTY VIII)
+    //Custom 1 (PROPERTY VIII) - Winning
     {
         5,
         { BASIC, BASIC, SNIPER, CANNON, SNIPER, NONE, NONE },
         { { 5, 5 }, { 8, 6 }, { 2, 3 }, { 11, 5 }, { 14, 2 }, { -1, -1 }, { -1, -1 } }
     },
-    //Custom 2 (PROPERTY VIII)
+    //Custom 2 (PROPERTY VIII) - Losing
     {
         4,
         { CANNON, CANNON, CANNON, CANNON, NONE, NONE, NONE },
@@ -131,17 +133,34 @@ const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
 //      ||      ||||        |||| ||||         ||||      |||| ||||              ||      //
 //      ||      |||||||||||||||| |||||||||||| ||||     ||||  ||||||||||||      ||      //
 //      ||      |||||||||||||||| |||||||||||| |||||||||||    ||||||||||||      ||      //
-//  \\  ||  //  ||||        |||| ||||         ||||||||       ||||          \\  ||  //  //
-//   \\ || //   ||||        |||| ||||         ||||  ||||     ||||           \\ || //   //
-//    \\||//    ||||        |||| |||||||||||| ||||    ||||   ||||||||||||    \\||//    //
+//  \\  ||  //  ||||        |||| ||||         ||||   ||||    ||||          \\  ||  //  //
+//   \\ || //   ||||        |||| ||||         ||||    ||||   ||||           \\ || //   //
+//    \\||//    ||||        |||| |||||||||||| ||||     ||||  ||||||||||||    \\||//    //
 //     \\//     ||||        |||| |||||||||||| ||||      |||| ||||||||||||     \\//     //
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 1;
+const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 3;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                     //
+//     //\\     ||||        |||| |||||||||||| |||||||||||    ||||||||||||     //\\     //
+//    //||\\    ||||        |||| |||||||||||| ||||     ||||  ||||||||||||    //||\\    //
+//   // || \\   ||||        |||| ||||         ||||      |||| ||||           // || \\   //
+//  //  ||  \\  ||||        |||| ||||         ||||      |||| ||||          //  ||  \\  //
+//      ||      |||||||||||||||| |||||||||||| ||||     ||||  ||||||||||||      ||      //
+//      ||      |||||||||||||||| |||||||||||| |||||||||||    ||||||||||||      ||      //
+//      ||      ||||        |||| ||||         ||||  ||||     ||||              ||      //
+//      ||      ||||        |||| ||||         ||||    ||||   ||||              ||      //
+//      ||      ||||        |||| |||||||||||| ||||     ||||  ||||||||||||      ||      //
+//      ||      ||||        |||| |||||||||||| ||||      |||| ||||||||||||      ||      //
+//                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////
+
 const int NUM_TURRETS = TURRETS_CONFIGUTATIONS[SELECTED_CONFIGURATION].numTurrets;
 
 int mainTowerLife = 10;
+int activeEnemies = NUM_ENEMIES;
 
 
 /*----------------------------------------------------------------------------------------------------*/
@@ -185,7 +204,31 @@ bool isPath(Coordinate pos){
 
     return false;        
 }
-</declaration>
+
+//Function used to find a target for the turret
+int findTarget(int turretId) {
+    int minDistance = turrets[turretId].range;    //Initialized with the highest acceptable value
+    int maxSpawnTime = -1;                        //Initialized with the highest not possible value
+    int targetId = -1;                            //The ID of the enemy targeted
+    int i;
+
+    for (i = 0; i &lt; NUM_ENEMIES; i++) {
+        if (enemies[i].active) {
+            int d = distance(turrets[turretId].pos, enemies[i].pos);
+            
+            if ( d &lt; minDistance || 
+                (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; maxSpawnTime) || 
+                (d == minDistance &amp;&amp; enemies[i].spawnTime == maxSpawnTime &amp;&amp; enemies[i].type == SQUARE)
+               ) {
+                minDistance = d;
+                maxSpawnTime = enemies[i].spawnTime;
+                targetId = i;
+            }
+        }
+    }
+    
+    return targetId;
+}</declaration>
 	<template>
 		<name>Controller</name>
 		<declaration>int turretsPlaced  = 0;      //Track the number of turrets that have been placed
@@ -251,7 +294,7 @@ void spawnEnemy(EnemyType type) {
 
 </declaration>
 		<location id="id0" x="680" y="-476">
-			<name x="638" y="-518">End_Spawn</name>
+			<name x="638" y="-518">Waiting</name>
 		</location>
 		<location id="id1" x="170" y="-476">
 			<name x="196" y="-476">Spawn_Enemy</name>
@@ -276,8 +319,27 @@ void spawnEnemy(EnemyType type) {
 			<name x="-357" y="-476">Initial_Enemies</name>
 			<committed/>
 		</location>
+		<location id="id6" x="986" y="-544">
+			<name x="969" y="-578">Won</name>
+		</location>
+		<location id="id7" x="986" y="-408">
+			<name x="969" y="-391">Lost</name>
+		</location>
 		<init ref="id2"/>
-		<transition id="id6">
+		<transition id="id8">
+			<source ref="id0"/>
+			<target ref="id7"/>
+			<label kind="guard" x="799" y="-408">mainTowerLife&lt;=0</label>
+			<nail x="748" y="-408"/>
+		</transition>
+		<transition id="id9">
+			<source ref="id0"/>
+			<target ref="id6"/>
+			<label kind="guard" x="773" y="-586">activeEnemies==0 &amp;&amp;
+mainTowerLife&gt;0</label>
+			<nail x="748" y="-544"/>
+		</transition>
+		<transition id="id10">
 			<source ref="id5"/>
 			<target ref="id5"/>
 			<label kind="guard" x="-450" y="-399">squaresSpawned==0</label>
@@ -286,32 +348,33 @@ void spawnEnemy(EnemyType type) {
 			<nail x="-340" y="-408"/>
 			<nail x="-408" y="-408"/>
 		</transition>
-		<transition id="id7">
+		<transition id="id11">
 			<source ref="id5"/>
 			<target ref="id5"/>
-			<label kind="guard" x="-450" y="-603">circlesSpawned==0</label>
+			<label kind="guard" x="-467" y="-620">circlesSpawned==0 &amp;&amp; 
+squaresSpawned!=0</label>
 			<label kind="synchronisation" x="-510" y="-586">enemySpawning[enemiesSpawned]!</label>
 			<label kind="assignment" x="-450" y="-569">spawnEnemy(CIRCLE)</label>
 			<nail x="-340" y="-544"/>
 			<nail x="-408" y="-544"/>
 		</transition>
-		<transition id="id8">
+		<transition id="id12">
 			<source ref="id2"/>
 			<target ref="id5"/>
 			<label kind="guard" x="-680" y="-501">turretsPlaced==NUM_TURRETS</label>
 		</transition>
-		<transition id="id9">
+		<transition id="id13">
 			<source ref="id5"/>
 			<target ref="id1"/>
 			<label kind="guard" x="-272" y="-501">circlesSpawned!=0 &amp;&amp; squaresSpawned!=0</label>
 		</transition>
-		<transition id="id10">
+		<transition id="id14">
 			<source ref="id3"/>
 			<target ref="id1"/>
 			<nail x="204" y="-646"/>
 			<nail x="204" y="-510"/>
 		</transition>
-		<transition id="id11">
+		<transition id="id15">
 			<source ref="id1"/>
 			<target ref="id3"/>
 			<label kind="guard" x="-178" y="-612">circlesSpawned&lt;NUM_CIRCLES &amp;&amp;
@@ -321,13 +384,13 @@ circleSpawnTimer==CIRCLE_SPAWN_TIME</label>
 			<nail x="136" y="-510"/>
 			<nail x="136" y="-646"/>
 		</transition>
-		<transition id="id12">
+		<transition id="id16">
 			<source ref="id4"/>
 			<target ref="id1"/>
 			<nail x="204" y="-306"/>
 			<nail x="204" y="-442"/>
 		</transition>
-		<transition id="id13">
+		<transition id="id17">
 			<source ref="id1"/>
 			<target ref="id4"/>
 			<label kind="guard" x="-178" y="-408">squaresSpawned&lt;NUM_SQUARES &amp;&amp;
@@ -337,7 +400,7 @@ squareSpawnTimer==SQUARE_SPAWN_TIME</label>
 			<nail x="136" y="-442"/>
 			<nail x="136" y="-306"/>
 		</transition>
-		<transition id="id14">
+		<transition id="id18">
 			<source ref="id2"/>
 			<target ref="id2"/>
 			<label kind="guard" x="-858" y="-399">turretsPlaced&lt;NUM_TURRETS</label>
@@ -346,7 +409,7 @@ squareSpawnTimer==SQUARE_SPAWN_TIME</label>
 			<nail x="-714" y="-408"/>
 			<nail x="-782" y="-408"/>
 		</transition>
-		<transition id="id15">
+		<transition id="id19">
 			<source ref="id1"/>
 			<target ref="id0"/>
 			<label kind="guard" x="306" y="-518">circlesSpawned==NUM_CIRCLES &amp;&amp;
@@ -387,6 +450,11 @@ int health() {
 /*----------------------------------------------------------------------------------------------------*/
 //HELPER FUNCTIONS
 
+void initEnemy() {
+    moveTimer = 0;
+    spawnTimer = 0;
+}
+
 //Function to update position and change path if needed
 void move(int i) {
     if (step &lt; SEGMENTS_LEN[segment] - 1) {
@@ -407,15 +475,19 @@ void attack() {
     if (enemies[enemyId].active) {
         mainTowerLife -= enemies[enemyId].damage;
         enemies[enemyId].active = false;
+        activeEnemies--;
     }
 }
 
 //Function to check if some turret need to shoot me
 void findTurretsToAwaken() {
     int t;
-
-    for (t = 0, counter = 0; t &lt; NUM_TURRETS; t++) {
-        if (turrets[t].ready &amp;&amp; distance(pos(), turrets[t].pos) &lt; turrets[t].range) {
+    
+    counter = 0;
+    turretToAwaken = -1;
+    
+    for (t = 0; t &lt; NUM_TURRETS; t++) {
+        if (turrets[t].ready &amp;&amp; findTarget(t) == enemyId) {
             turretsToAwaken[t] = true;
             counter++;
         }
@@ -426,7 +498,7 @@ void findTurretsToAwaken() {
 void selectTurretToAwaken() {
     int t;
     
-    for (t = 0; t &lt; MAX_TURRETS; t++) {
+    for (t = turretToAwaken + 1; t &lt; NUM_TURRETS; t++) {
         if (turretsToAwaken[t]) {
             turretsToAwaken[t] = false;
             turretToAwaken = t;
@@ -434,82 +506,83 @@ void selectTurretToAwaken() {
         }
     }
 }</declaration>
-		<location id="id16" x="-510" y="-68">
+		<location id="id20" x="-510" y="-68">
 			<name x="-561" y="-102">Not_Spawned</name>
 		</location>
-		<location id="id17" x="-170" y="-68">
+		<location id="id21" x="-170" y="-68">
 			<name x="-153" y="-59">Hit</name>
 			<committed/>
 		</location>
-		<location id="id18" x="170" y="-68">
+		<location id="id22" x="170" y="-68">
 			<name x="136" y="-119">Waiting</name>
 			<label kind="invariant" x="94" y="-102">moveTimer&lt;=speed()</label>
 		</location>
-		<location id="id19" x="170" y="102">
+		<location id="id23" x="170" y="102">
 			<name x="145" y="119">Moving</name>
 			<committed/>
 		</location>
-		<location id="id20" x="544" y="102">
+		<location id="id24" x="544" y="102">
 			<name x="527" y="119">End</name>
 		</location>
-		<location id="id21" x="-170" y="-272">
+		<location id="id25" x="-170" y="-272">
 			<name x="-221" y="-306">Send_Signal</name>
 			<committed/>
 		</location>
-		<init ref="id16"/>
-		<transition id="id22">
-			<source ref="id18"/>
-			<target ref="id20"/>
-			<label kind="guard" x="306" y="-93">health()&lt;=0</label>
+		<init ref="id20"/>
+		<transition id="id26">
+			<source ref="id22"/>
+			<target ref="id24"/>
+			<label kind="guard" x="306" y="-110">health()&lt;=0</label>
+			<label kind="assignment" x="289" y="-93">activeEnemies--</label>
 			<nail x="544" y="-68"/>
 		</transition>
-		<transition id="id23">
-			<source ref="id21"/>
-			<target ref="id17"/>
+		<transition id="id27">
+			<source ref="id25"/>
+			<target ref="id21"/>
 			<label kind="synchronisation" x="-493" y="-178">turretAwakening[turretToAwaken]!</label>
 			<nail x="-204" y="-238"/>
 			<nail x="-204" y="-102"/>
 		</transition>
-		<transition id="id24">
-			<source ref="id17"/>
-			<target ref="id21"/>
+		<transition id="id28">
+			<source ref="id21"/>
+			<target ref="id25"/>
 			<label kind="guard" x="-127" y="-187">counter&gt;0</label>
 			<label kind="assignment" x="-127" y="-170">selectTurretToAwaken()</label>
 			<nail x="-136" y="-102"/>
 			<nail x="-136" y="-238"/>
 		</transition>
-		<transition id="id25">
-			<source ref="id19"/>
-			<target ref="id20"/>
+		<transition id="id29">
+			<source ref="id23"/>
+			<target ref="id24"/>
 			<label kind="guard" x="281" y="111">isMainTower(pos())</label>
 			<label kind="assignment" x="323" y="128">attack()</label>
 		</transition>
-		<transition id="id26">
-			<source ref="id19"/>
-			<target ref="id17"/>
+		<transition id="id30">
+			<source ref="id23"/>
+			<target ref="id21"/>
 			<label kind="guard" x="-85" y="111">!isMainTower(pos())</label>
 			<label kind="assignment" x="-93" y="128">findTurretsToAwaken()</label>
 			<nail x="-170" y="102"/>
 		</transition>
-		<transition id="id27">
-			<source ref="id18"/>
-			<target ref="id19"/>
+		<transition id="id31">
+			<source ref="id22"/>
+			<target ref="id23"/>
 			<label kind="select" x="179" y="9">i : int[0,1]</label>
 			<label kind="guard" x="179" y="-25">health()&gt;0 &amp;&amp;
 moveTimer==speed()</label>
 			<label kind="assignment" x="179" y="26">move(i)</label>
 		</transition>
-		<transition id="id28">
-			<source ref="id17"/>
-			<target ref="id18"/>
+		<transition id="id32">
+			<source ref="id21"/>
+			<target ref="id22"/>
 			<label kind="guard" x="-42" y="-93">counter==0</label>
 		</transition>
-		<transition id="id29">
-			<source ref="id16"/>
-			<target ref="id17"/>
+		<transition id="id33">
+			<source ref="id20"/>
+			<target ref="id21"/>
 			<label kind="synchronisation" x="-442" y="-59">enemySpawning[enemyId]?</label>
-			<label kind="assignment" x="-391" y="-42">moveTimer=0,
-spawnTimer=0</label>
+			<label kind="assignment" x="-433" y="-42">initEnemy(),
+findTurretsToAwaken()</label>
 		</transition>
 	</template>
 	<template>
@@ -542,86 +615,67 @@ void shoot(int enemyId) {
     fireTimer = 0;
 }
 
-//Function used to find a target for the turret
-void findTarget() {
-    int minDistance = turrets[turretId].range;    //Initialized with the highest acceptable value
-    int maxSpawnTime = -1;                        //Initialized with the highest not possible value
-    int target = -1;                              //The ID of the enemy targeted
-    int i;
-
-    for (i = 0; i &lt; NUM_ENEMIES; i++) {
-        if (enemies[i].active) {
-            int d = distance(turrets[turretId].pos, enemies[i].pos);
-            
-            if ( d &lt; minDistance || 
-                (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; maxSpawnTime) || 
-                (d == minDistance &amp;&amp; enemies[i].spawnTime == maxSpawnTime &amp;&amp; enemies[i].type == SQUARE)
-               ) {
-                minDistance = d;
-                maxSpawnTime = enemies[i].spawnTime;
-                target = i;
-            }
-        }
-    }
+//Function used to check if there is an enemy in the range
+void checkEnemy() {
+    int targetId = findTarget(turretId);
     
-    if (target != -1) {
-        shoot(target);
+    if (targetId == -1) {
+        turrets[turretId].ready = true;
+        return;
     }
-    else {
-        turrets[turretId].ready = true;ok
-    }
+
+    shoot(targetId);
 }
 </declaration>
-		<location id="id30" x="-884" y="-68">
+		<location id="id34" x="-884" y="-68">
 			<name x="-926" y="-110">Not_Placed</name>
 		</location>
-		<location id="id31" x="-510" y="-68">
+		<location id="id35" x="-510" y="-68">
 			<name x="-493" y="-76">Firing</name>
 			<committed/>
 		</location>
-		<location id="id32" x="-510" y="-272">
+		<location id="id36" x="-510" y="-272">
 			<name x="-535" y="-323">Reload</name>
 			<label kind="invariant" x="-603" y="-306">fireTimer&lt;=fireSpeed()</label>
 		</location>
-		<location id="id33" x="-510" y="136">
+		<location id="id37" x="-510" y="136">
 			<name x="-535" y="153">Ready</name>
 		</location>
-		<init ref="id30"/>
-		<transition id="id34">
-			<source ref="id31"/>
-			<target ref="id33"/>
+		<init ref="id34"/>
+		<transition id="id38">
+			<source ref="id35"/>
+			<target ref="id37"/>
 			<label kind="guard" x="-467" y="26">turrets[turretId].ready</label>
 			<nail x="-476" y="-34"/>
 			<nail x="-476" y="102"/>
 		</transition>
-		<transition id="id35">
-			<source ref="id33"/>
-			<target ref="id31"/>
+		<transition id="id39">
+			<source ref="id37"/>
+			<target ref="id35"/>
 			<label kind="synchronisation" x="-782" y="17">turretAwakening[turretId]?</label>
-			<label kind="assignment" x="-722" y="34">findTarget()</label>
+			<label kind="assignment" x="-722" y="34">checkEnemy()</label>
 			<nail x="-544" y="102"/>
 			<nail x="-544" y="-34"/>
 		</transition>
-		<transition id="id36">
-			<source ref="id32"/>
-			<target ref="id31"/>
+		<transition id="id40">
+			<source ref="id36"/>
+			<target ref="id35"/>
 			<label kind="guard" x="-748" y="-187">fireTimer==fireSpeed()</label>
-			<label kind="assignment" x="-705" y="-170">findTarget()</label>
+			<label kind="assignment" x="-705" y="-170">checkEnemy()</label>
 			<nail x="-544" y="-238"/>
 			<nail x="-544" y="-102"/>
 		</transition>
-		<transition id="id37">
-			<source ref="id31"/>
-			<target ref="id32"/>
+		<transition id="id41">
+			<source ref="id35"/>
+			<target ref="id36"/>
 			<label kind="guard" x="-467" y="-187">!turrets[turretId].ready</label>
 			<nail x="-476" y="-102"/>
 			<nail x="-476" y="-238"/>
 		</transition>
-		<transition id="id38">
-			<source ref="id30"/>
-			<target ref="id31"/>
-			<label kind="synchronisation" x="-799" y="-110">turretPlacing[turretId]?</label>
-			<label kind="assignment" x="-748" y="-93">findTarget()</label>
+		<transition id="id42">
+			<source ref="id34"/>
+			<target ref="id35"/>
+			<label kind="synchronisation" x="-799" y="-93">turretPlacing[turretId]?</label>
 		</transition>
 	</template>
 	<system>ControllerProcess = Controller();
@@ -640,38 +694,38 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 	<queries>
 		<option key="--diagnostic" value="1"/>
 		<query>
-			<formula>A[] (deadlock imply (ControllerProcess.End_Spawn &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End))
+			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End))
 </formula>
-			<comment>Property I</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-12 23:12:11 +0200">
+			<comment>(Property I)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:29 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) isMainTower(enemies[i].pos)</formula>
-			<comment>Property II</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-12 22:08:54 +0200">
+			<comment>(Property II)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:34 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * CIRCLE_SPEED)))</formula>
-			<comment>Property III</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-12 22:09:00 +0200">
+			<comment>(Property III)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:38 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * SQUARE_SPEED)))</formula>
-			<comment>Property IV</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-12 22:09:06 +0200">
+			<comment>(Property IV)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:42 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
-			<comment>Property V</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-12 22:09:12 +0200">
+			<comment>(Property V)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:47:45 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -680,17 +734,26 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<comment/>
 		</query>
 		<query>
-			<formula>A[] ((forall (i : enemyId_t) EnemyProcess(i).End) &amp;&amp; ControllerProcess.End_Spawn) imply mainTowerLife &gt; 0</formula>
-			<comment>Property VII,Property VIII, use different turret configuration to check winning or losing</comment>
-			<result outcome="failure" type="quality" timestamp="2025-05-13 11:27:00 +0200">
+			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End &amp;&amp; forall(j : turretId_t) TurretProcess(j).Ready))
+</formula>
+			<comment>(Property VII)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:50:51 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
-			<formula>A[] (deadlock imply (ControllerProcess.End_Spawn &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End &amp;&amp; forall(j : turretId_t) TurretProcess(j).Ready))
-</formula>
-			<comment>Property VII</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-12 23:11:51 +0200">
+			<formula>A[] deadlock imply ControllerProcess.Won</formula>
+			<comment>(Properties VI / VIII)
+Query used to check if the selected configuration is a winning configuration. (THE RESULT MUST BE OPPOSITE TO NEXT QUERY)</comment>
+			<result outcome="failure" type="quality" timestamp="2025-05-13 16:51:11 +0200">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] deadlock imply ControllerProcess.Lost</formula>
+			<comment>(Properties VI / VIII)
+Query used to check if the selected configuration is a losing configuration. (THE RESULT MUST BE OPPOSITE TO PREVIOUS QUERY)</comment>
+			<result outcome="success" type="quality" timestamp="2025-05-13 16:51:25 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
