@@ -105,7 +105,7 @@ const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
         { NONE, NONE, NONE, NONE, NONE, NONE, NONE },
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } }
     },
-    //Default (PROPERTY VI)
+    //Default (PROPERTY VI) - Winning
     {
         7,
         { SNIPER, BASIC, CANNON, CANNON, SNIPER, CANNON, CANNON },
