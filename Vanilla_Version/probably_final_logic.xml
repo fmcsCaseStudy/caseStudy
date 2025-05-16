@@ -295,6 +295,8 @@ void spawnEnemy(EnemyType type) {
 </declaration>
 		<location id="id0" x="680" y="-476">
 			<name x="638" y="-518">Waiting</name>
+			<label kind="comments" x="578" y="-799">Waiting:
+Attende che il gioco termini.</label>
 		</location>
 		<location id="id1" x="170" y="-476">
 			<name x="196" y="-476">Spawn_Enemy</name>
@@ -302,9 +304,21 @@ void spawnEnemy(EnemyType type) {
  circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
 (squaresSpawned==NUM_SQUARES || 
  squareSpawnTimer&lt;=SQUARE_SPAWN_TIME)</label>
+			<label kind="comments" x="59" y="-824">Spawn_Enemy:
+Attende il momento in cui spawnare
+un nemico.</label>
 		</location>
 		<location id="id2" x="-748" y="-476">
 			<name x="-799" y="-518">Place_Turret</name>
+			<label kind="comments" x="-867" y="-756">Place_Turret: 
+ha il compito di inizializzare
+ tutte variabile di turret e 
+mandare il segnale ai singoli 
+processi delle turret 
+per farli avviare. 
+Quando sono state settate 
+tutte le torrete passa 
+allo stato successivo.</label>
 			<committed/>
 		</location>
 		<location id="id3" x="170" y="-680">
@@ -317,6 +331,11 @@ void spawnEnemy(EnemyType type) {
 		</location>
 		<location id="id5" x="-374" y="-476">
 			<name x="-357" y="-476">Initial_Enemies</name>
+			<label kind="comments" x="-484" y="-756">Initial_Enemies:
+Spawna i primi due nemici cosi
+da averli al tempo 0.
+Prima spawna lo square cosi 
+da essere bersagliato per primo.</label>
 			<committed/>
 		</location>
 		<location id="id6" x="986" y="-544">
@@ -509,21 +528,39 @@ void selectTurretToAwaken() {
 }</declaration>
 		<location id="id20" x="-510" y="-68">
 			<name x="-561" y="-102">Not_Spawned</name>
+			<label kind="comments" x="-646" y="-382">Not_Spawned:
+Attende il segnale di inizializzazione,
+e inizializza i timers.</label>
 		</location>
 		<location id="id21" x="-170" y="-68">
-			<name x="-153" y="-59">Hit</name>
+			<name x="-153" y="-59">Targeted</name>
+			<label kind="comments" x="-255" y="-425">Targeted+Send_Signal:
+In caso di essere bersaglio di
+qualche torretta, sveglia quelle torrette.
+E cerca se puo essere bersaglio
+di qualche torreta</label>
 			<committed/>
 		</location>
 		<location id="id22" x="170" y="-68">
 			<name x="136" y="-119">Waiting</name>
 			<label kind="invariant" x="94" y="-102">moveTimer&lt;=speed()</label>
+			<label kind="comments" x="59" y="-263">Waiting:
+Aspetta che si puo movere,
+nel mentre controlla se 'e vivo o no</label>
 		</location>
 		<location id="id23" x="170" y="102">
 			<name x="145" y="119">Moving</name>
+			<label kind="comments" x="42" y="161">Moving:
+Aggiorna la proria posizione,
+se necessario cambia il percorso</label>
 			<committed/>
 		</location>
 		<location id="id24" x="544" y="102">
 			<name x="527" y="119">End</name>
+			<label kind="comments" x="450" y="161">End:
+Stato finale, o 'e morto
+o 'e arrivato al MainTower.
+E non puo essere piu bersagliato</label>
 		</location>
 		<location id="id25" x="-170" y="-272">
 			<name x="-221" y="-306">Send_Signal</name>
@@ -569,7 +606,7 @@ void selectTurretToAwaken() {
 			<source ref="id22"/>
 			<target ref="id23"/>
 			<label kind="select" x="179" y="9">i : int[0,1]</label>
-			<label kind="guard" x="179" y="-25">health()&gt;0 &amp;&amp;
+			<label kind="guard" x="178" y="-34">health()&gt;0 &amp;&amp;
 moveTimer==speed()</label>
 			<label kind="assignment" x="179" y="26">move(i)</label>
 		</transition>
@@ -630,23 +667,35 @@ void checkEnemy() {
 </declaration>
 		<location id="id34" x="-884" y="-68">
 			<name x="-926" y="-110">Not_Placed</name>
+			<label kind="comments" x="-1122" y="-178">Not_Placed:
+Attende il segnale di inizializzazione.</label>
 		</location>
 		<location id="id35" x="-510" y="-68">
 			<name x="-493" y="-76">Firing</name>
+			<label kind="comments" x="-374" y="-136">Firing:
+Controlla se ho trovato un 
+nemico nel range e posso sparare.
+Se si passo allo stato Reload, se no
+passo allo stato Ready</label>
 			<committed/>
 		</location>
 		<location id="id36" x="-510" y="-272">
 			<name x="-535" y="-323">Reload</name>
 			<label kind="invariant" x="-603" y="-306">fireTimer&lt;=fireSpeed()</label>
+			<label kind="comments" x="-603" y="-382">Reload:
+Attende se puo attacare.</label>
 		</location>
 		<location id="id37" x="-510" y="136">
 			<name x="-535" y="153">Ready</name>
+			<label kind="comments" x="-520" y="195">Ready:
+Attende che i nemici entrano nel mio range e il segnale di
+sveglio</label>
 		</location>
 		<init ref="id34"/>
 		<transition id="id38">
 			<source ref="id35"/>
 			<target ref="id37"/>
-			<label kind="guard" x="-467" y="26">turrets[turretId].ready</label>
+			<label kind="guard" x="-442" y="51">turrets[turretId].ready</label>
 			<nail x="-476" y="-34"/>
 			<nail x="-476" y="102"/>
 		</transition>
