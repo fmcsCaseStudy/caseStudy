@@ -140,7 +140,7 @@ const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 1;
+const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 3;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
@@ -177,8 +177,8 @@ urgent chan turretAwakening[MAX_TURRETS];    //channel to awake turrets
 
 //Function to calculate Chebyshev distance between two points
 int distance(Coordinate pos1, Coordinate pos2) {
-    int x = abs(pos1.x-pos2.x);
-    int y = abs(pos1.y-pos2.y);
+    int x = abs(pos1.x - pos2.x);
+    int y = abs(pos1.y - pos2.y);
     
     return x &gt;? y;
 }
@@ -294,9 +294,11 @@ void spawnEnemy(EnemyType type) {
 
 </declaration>
 		<location id="id0" x="680" y="-476">
-			<name x="638" y="-518">Waiting</name>
-			<label kind="comments" x="578" y="-799">Waiting:
-Attende che il gioco termini.</label>
+			<name x="646" y="-518">Waiting</name>
+			<label kind="comments" x="604" y="-850">&gt;&gt;&gt; Waiting &lt;&lt;&lt;
+
+Used to wait the
+end of the game.</label>
 		</location>
 		<location id="id1" x="170" y="-476">
 			<name x="196" y="-476">Spawn_Enemy</name>
@@ -304,21 +306,21 @@ Attende che il gioco termini.</label>
  circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
 (squaresSpawned==NUM_SQUARES || 
  squareSpawnTimer&lt;=SQUARE_SPAWN_TIME)</label>
-			<label kind="comments" x="59" y="-824">Spawn_Enemy:
-Attende il momento in cui spawnare
-un nemico.</label>
+			<label kind="comments" x="43" y="-850">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Spawn_Enemy &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+Used to wait the moment in
+which an enemy must be spawned.</label>
 		</location>
 		<location id="id2" x="-748" y="-476">
 			<name x="-799" y="-518">Place_Turret</name>
-			<label kind="comments" x="-867" y="-756">Place_Turret: 
-ha il compito di inizializzare
- tutte variabile di turret e 
-mandare il segnale ai singoli 
-processi delle turret 
-per farli avviare. 
-Quando sono state settate 
-tutte le torrete passa 
-allo stato successivo.</label>
+			<label kind="comments" x="-884" y="-850">&gt;&gt;&gt;&gt;&gt;&gt;&gt; Place_Turret &lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+At each iteration:
+- it setups all the variables
+  related to a turret in the
+  global array turrets[];
+- it sends a signal to the
+  related TurretProcess().</label>
 			<committed/>
 		</location>
 		<location id="id3" x="170" y="-680">
@@ -331,32 +333,40 @@ allo stato successivo.</label>
 		</location>
 		<location id="id5" x="-374" y="-476">
 			<name x="-357" y="-476">Initial_Enemies</name>
-			<label kind="comments" x="-484" y="-756">Initial_Enemies:
-Spawna i primi due nemici cosi
-da averli al tempo 0.
-Prima spawna lo square cosi 
-da essere bersagliato per primo.</label>
+			<label kind="comments" x="-527" y="-850">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Initial_Enemies &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+It spawns the first two enemies
+which must spawn at time 0.
+The square is spawned first so 
+it is targeted first
+(To respect targeting priorities).</label>
 			<committed/>
 		</location>
-		<location id="id6" x="986" y="-544">
-			<name x="969" y="-578">Won</name>
+		<location id="id6" x="986" y="-510">
+			<name x="969" y="-544">Won</name>
+			<label kind="comments" x="884" y="-850">&gt;&gt;&gt;&gt;&gt; Won + Lost &lt;&lt;&lt;&lt;&lt;
+
+Final states reached at
+the end of the game.
+They indicate the
+configuration's result.</label>
 		</location>
-		<location id="id7" x="986" y="-408">
-			<name x="969" y="-391">Lost</name>
+		<location id="id7" x="986" y="-442">
+			<name x="969" y="-425">Lost</name>
 		</location>
 		<init ref="id2"/>
 		<transition id="id8">
 			<source ref="id0"/>
 			<target ref="id7"/>
-			<label kind="guard" x="799" y="-408">mainTowerLife&lt;=0</label>
-			<nail x="748" y="-408"/>
+			<label kind="guard" x="799" y="-433">mainTowerLife&lt;=0</label>
+			<nail x="748" y="-442"/>
 		</transition>
 		<transition id="id9">
 			<source ref="id0"/>
 			<target ref="id6"/>
-			<label kind="guard" x="773" y="-586">activeEnemies==0 &amp;&amp;
+			<label kind="guard" x="782" y="-552">activeEnemies==0 &amp;&amp;
 mainTowerLife&gt;0</label>
-			<nail x="748" y="-544"/>
+			<nail x="748" y="-510"/>
 		</transition>
 		<transition id="id10">
 			<source ref="id5"/>
@@ -431,7 +441,7 @@ squareSpawnTimer==SQUARE_SPAWN_TIME</label>
 		<transition id="id19">
 			<source ref="id1"/>
 			<target ref="id0"/>
-			<label kind="guard" x="306" y="-518">circlesSpawned==NUM_CIRCLES &amp;&amp;
+			<label kind="guard" x="289" y="-518">circlesSpawned==NUM_CIRCLES &amp;&amp;
 squaresSpawned==NUM_SQUARES</label>
 		</transition>
 	</template>
@@ -445,7 +455,7 @@ int step = 0;                         //Track in which cell of the segment the e
 clock moveTimer;                      //Track enemy movement time
 clock spawnTimer;                     //Used to check queries
 
-int counter;                          //Track how many turrets need to be awakened
+int numTurretsToAwaken;               //Track how many turrets need to be awakened
 int turretToAwaken;                   //Track which turret will be awakened now
 bool turretsToAwaken[MAX_TURRETS];    //Track which turrets need to be awakened
 
@@ -491,24 +501,30 @@ void move(int i) {
 
 //Function to attack main tower
 void attack() {
-    if (enemies[enemyId].active) {
-        mainTowerLife -= enemies[enemyId].damage;
-        enemies[enemyId].active = false;
-        activeEnemies--;
-    }
+    if (!enemies[enemyId].active) return;
+
+    mainTowerLife -= enemies[enemyId].damage;
+}
+
+//Function to set the enemy as inactive
+void deactive() {
+    if (!enemies[enemyId].active) return;
+
+    enemies[enemyId].active = false;
+    activeEnemies--;
 }
 
 //Function to check if some turret need to shoot me
 void findTurretsToAwaken() {
     int t;
     
-    counter = 0;
+    numTurretsToAwaken = 0;
     turretToAwaken = -1;
     
     for (t = 0; t &lt; NUM_TURRETS; t++) {
         if (turrets[t].ready &amp;&amp; findTarget(t) == enemyId) {
             turretsToAwaken[t] = true;
-            counter++;
+            numTurretsToAwaken++;
         }
     }
 }
@@ -521,105 +537,123 @@ void selectTurretToAwaken() {
         if (turretsToAwaken[t]) {
             turretsToAwaken[t] = false;
             turretToAwaken = t;
-            counter--;
+            numTurretsToAwaken--;
             return;
         }
     }
 }</declaration>
 		<location id="id20" x="-510" y="-68">
-			<name x="-561" y="-102">Not_Spawned</name>
-			<label kind="comments" x="-646" y="-382">Not_Spawned:
-Attende il segnale di inizializzazione,
-e inizializza i timers.</label>
+			<name x="-552" y="-110">Not_Spawned</name>
+			<label kind="comments" x="-646" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Not_Spawned &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+Used to wait the initialization
+signal.
+Once received, it resets timers.</label>
 		</location>
 		<location id="id21" x="-170" y="-68">
 			<name x="-153" y="-59">Targeted</name>
-			<label kind="comments" x="-255" y="-425">Targeted+Send_Signal:
-In caso di essere bersaglio di
-qualche torretta, sveglia quelle torrette.
-E cerca se puo essere bersaglio
-di qualche torreta</label>
+			<label kind="comments" x="-331" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Targeted + Send_Signal &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+It checks if I can be targeted by any
+ready turrets. If so, at each iteration,
+it sends a signal to wake up the turret.</label>
 			<committed/>
 		</location>
 		<location id="id22" x="170" y="-68">
 			<name x="136" y="-119">Waiting</name>
 			<label kind="invariant" x="94" y="-102">moveTimer&lt;=speed()</label>
-			<label kind="comments" x="59" y="-263">Waiting:
-Aspetta che si puo movere,
-nel mentre controlla se 'e vivo o no</label>
+			<label kind="comments" x="43" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Waiting &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+Used to wait the moving period.
+In the meantime, it checks
+if I am still alive.</label>
 		</location>
 		<location id="id23" x="170" y="102">
 			<name x="145" y="119">Moving</name>
-			<label kind="comments" x="42" y="161">Moving:
-Aggiorna la proria posizione,
-se necessario cambia il percorso</label>
+			<label kind="comments" x="26" y="170">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Moving &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+It updates the enemy's position
+and, if necessary, it selects a path.</label>
 			<committed/>
 		</location>
-		<location id="id24" x="544" y="102">
-			<name x="527" y="119">End</name>
-			<label kind="comments" x="450" y="161">End:
-Stato finale, o 'e morto
-o 'e arrivato al MainTower.
-E non puo essere piu bersagliato</label>
+		<location id="id24" x="612" y="-68">
+			<name x="595" y="-110">End</name>
+			<label kind="comments" x="485" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; End &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+Final state, I am dead or
+I am arrived to the Main Tower.
+I can't be targeted anymore.</label>
 		</location>
 		<location id="id25" x="-170" y="-272">
-			<name x="-221" y="-306">Send_Signal</name>
+			<name x="-212" y="-314">Send_Signal</name>
 			<committed/>
 		</location>
+		<location id="id26" x="612" y="102">
+			<name x="578" y="119">Attacking</name>
+			<label kind="invariant" x="544" y="136">moveTimer&lt;=speed()</label>
+			<label kind="comments" x="476" y="170">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Attacking &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+I attack the Main Tower and wait
+the moving period to leave the map</label>
+		</location>
 		<init ref="id20"/>
-		<transition id="id26">
+		<transition id="id27">
+			<source ref="id26"/>
+			<target ref="id24"/>
+			<label kind="guard" x="459" y="0">moveTimer==speed()</label>
+			<label kind="assignment" x="493" y="17">deactive()</label>
+		</transition>
+		<transition id="id28">
 			<source ref="id22"/>
 			<target ref="id24"/>
-			<label kind="guard" x="306" y="-110">health()&lt;=0</label>
-			<label kind="assignment" x="289" y="-93">activeEnemies--</label>
-			<nail x="544" y="-68"/>
+			<label kind="guard" x="349" y="-93">health()&lt;=0</label>
 		</transition>
-		<transition id="id27">
+		<transition id="id29">
 			<source ref="id25"/>
 			<target ref="id21"/>
-			<label kind="synchronisation" x="-493" y="-178">turretAwakening[turretToAwaken]!</label>
+			<label kind="synchronisation" x="-467" y="-178">turretAwakening[turretToAwaken]!</label>
 			<nail x="-204" y="-238"/>
 			<nail x="-204" y="-102"/>
 		</transition>
-		<transition id="id28">
+		<transition id="id30">
 			<source ref="id21"/>
 			<target ref="id25"/>
-			<label kind="guard" x="-127" y="-187">counter&gt;0</label>
+			<label kind="guard" x="-127" y="-187">numTurretsToAwaken&gt;0</label>
 			<label kind="assignment" x="-127" y="-170">selectTurretToAwaken()</label>
 			<nail x="-136" y="-102"/>
 			<nail x="-136" y="-238"/>
 		</transition>
-		<transition id="id29">
-			<source ref="id23"/>
-			<target ref="id24"/>
-			<label kind="guard" x="281" y="111">isMainTower(pos())</label>
-			<label kind="assignment" x="323" y="128">attack()</label>
-		</transition>
-		<transition id="id30">
-			<source ref="id23"/>
-			<target ref="id21"/>
-			<label kind="guard" x="-85" y="111">!isMainTower(pos())</label>
-			<label kind="assignment" x="-93" y="128">findTurretsToAwaken()</label>
-			<nail x="-170" y="102"/>
-		</transition>
 		<transition id="id31">
-			<source ref="id22"/>
-			<target ref="id23"/>
-			<label kind="select" x="179" y="9">i : int[0,1]</label>
-			<label kind="guard" x="178" y="-34">health()&gt;0 &amp;&amp;
-moveTimer==speed()</label>
-			<label kind="assignment" x="179" y="26">move(i)</label>
+			<source ref="id23"/>
+			<target ref="id26"/>
+			<label kind="guard" x="315" y="111">isMainTower(pos())</label>
+			<label kind="assignment" x="357" y="128">attack()</label>
 		</transition>
 		<transition id="id32">
-			<source ref="id21"/>
-			<target ref="id22"/>
-			<label kind="guard" x="-42" y="-93">counter==0</label>
+			<source ref="id23"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-76" y="111">!isMainTower(pos())</label>
+			<label kind="assignment" x="-85" y="128">findTurretsToAwaken()</label>
+			<nail x="-170" y="102"/>
 		</transition>
 		<transition id="id33">
+			<source ref="id22"/>
+			<target ref="id23"/>
+			<label kind="select" x="179" y="17">i : int[0,1]</label>
+			<label kind="guard" x="179" y="-17">health()&gt;0 &amp;&amp;
+moveTimer==speed()</label>
+			<label kind="assignment" x="179" y="34">move(i)</label>
+		</transition>
+		<transition id="id34">
+			<source ref="id21"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-85" y="-93">numTurretsToAwaken==0</label>
+		</transition>
+		<transition id="id35">
 			<source ref="id20"/>
 			<target ref="id21"/>
-			<label kind="synchronisation" x="-442" y="-59">enemySpawning[enemyId]?</label>
-			<label kind="assignment" x="-433" y="-42">initEnemy(),
+			<label kind="synchronisation" x="-433" y="-59">enemySpawning[enemyId]?</label>
+			<label kind="assignment" x="-425" y="-42">initEnemy(),
 findTurretsToAwaken()</label>
 		</transition>
 	</template>
@@ -648,6 +682,7 @@ void shoot(int enemyId) {
 
     if (enemies[enemyId].health &lt;= 0) {
         enemies[enemyId].active = false;
+        activeEnemies--;
     }
 
     fireTimer = 0;
@@ -665,67 +700,71 @@ void checkEnemy() {
     shoot(targetId);
 }
 </declaration>
-		<location id="id34" x="-884" y="-68">
+		<location id="id36" x="-884" y="-68">
 			<name x="-926" y="-110">Not_Placed</name>
-			<label kind="comments" x="-1122" y="-178">Not_Placed:
-Attende il segnale di inizializzazione.</label>
+			<label kind="comments" x="-977" y="-221">&gt;&gt;&gt;&gt;&gt; Not_Placed &lt;&lt;&lt;&lt;&lt;
+
+Used to wait the
+initialization signal.</label>
 		</location>
-		<location id="id35" x="-510" y="-68">
+		<location id="id37" x="-510" y="-68">
 			<name x="-493" y="-76">Firing</name>
-			<label kind="comments" x="-374" y="-136">Firing:
-Controlla se ho trovato un 
-nemico nel range e posso sparare.
-Se si passo allo stato Reload, se no
-passo allo stato Ready</label>
+			<label kind="comments" x="-374" y="-119">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Firing &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+It checks if a target is available:
+- if yes, it shoots;
+- if no, it stays ready.</label>
 			<committed/>
 		</location>
-		<location id="id36" x="-510" y="-272">
+		<location id="id38" x="-510" y="-272">
 			<name x="-535" y="-323">Reload</name>
 			<label kind="invariant" x="-603" y="-306">fireTimer&lt;=fireSpeed()</label>
-			<label kind="comments" x="-603" y="-382">Reload:
-Attende se puo attacare.</label>
+			<label kind="comments" x="-374" y="-340">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Reload &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+Used to wait the reloading period.</label>
 		</location>
-		<location id="id37" x="-510" y="136">
-			<name x="-535" y="153">Ready</name>
-			<label kind="comments" x="-520" y="195">Ready:
-Attende che i nemici entrano nel mio range e il segnale di
-sveglio</label>
+		<location id="id39" x="-510" y="136">
+			<name x="-527" y="153">Ready</name>
+			<label kind="comments" x="-374" y="94">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Ready &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+
+It waits an enemy to enter
+inside his range and wake him up.</label>
 		</location>
-		<init ref="id34"/>
-		<transition id="id38">
-			<source ref="id35"/>
-			<target ref="id37"/>
-			<label kind="guard" x="-442" y="51">turrets[turretId].ready</label>
+		<init ref="id36"/>
+		<transition id="id40">
+			<source ref="id37"/>
+			<target ref="id39"/>
+			<label kind="guard" x="-467" y="26">turrets[turretId].ready</label>
 			<nail x="-476" y="-34"/>
 			<nail x="-476" y="102"/>
 		</transition>
-		<transition id="id39">
-			<source ref="id37"/>
-			<target ref="id35"/>
-			<label kind="synchronisation" x="-782" y="17">turretAwakening[turretId]?</label>
-			<label kind="assignment" x="-722" y="34">checkEnemy()</label>
+		<transition id="id41">
+			<source ref="id39"/>
+			<target ref="id37"/>
+			<label kind="synchronisation" x="-765" y="17">turretAwakening[turretId]?</label>
+			<label kind="assignment" x="-705" y="34">checkEnemy()</label>
 			<nail x="-544" y="102"/>
 			<nail x="-544" y="-34"/>
 		</transition>
-		<transition id="id40">
-			<source ref="id36"/>
-			<target ref="id35"/>
-			<label kind="guard" x="-748" y="-187">fireTimer==fireSpeed()</label>
-			<label kind="assignment" x="-705" y="-170">checkEnemy()</label>
+		<transition id="id42">
+			<source ref="id38"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-731" y="-187">fireTimer==fireSpeed()</label>
+			<label kind="assignment" x="-688" y="-170">checkEnemy()</label>
 			<nail x="-544" y="-238"/>
 			<nail x="-544" y="-102"/>
 		</transition>
-		<transition id="id41">
-			<source ref="id35"/>
-			<target ref="id36"/>
+		<transition id="id43">
+			<source ref="id37"/>
+			<target ref="id38"/>
 			<label kind="guard" x="-467" y="-187">!turrets[turretId].ready</label>
 			<nail x="-476" y="-102"/>
 			<nail x="-476" y="-238"/>
 		</transition>
-		<transition id="id42">
-			<source ref="id34"/>
-			<target ref="id35"/>
-			<label kind="synchronisation" x="-799" y="-93">turretPlacing[turretId]?</label>
+		<transition id="id44">
+			<source ref="id36"/>
+			<target ref="id37"/>
+			<label kind="synchronisation" x="-790" y="-93">turretPlacing[turretId]?</label>
 		</transition>
 	</template>
 	<system>ControllerProcess = Controller();
@@ -747,35 +786,35 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End))
 </formula>
 			<comment>(Property I)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:06 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:24 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) isMainTower(enemies[i].pos)</formula>
 			<comment>(Property II)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:11 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:30 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * CIRCLE_SPEED)))</formula>
 			<comment>(Property III)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:14 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:33 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * SQUARE_SPEED)))</formula>
 			<comment>(Property IV)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:18 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:38 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
 			<comment>(Property V)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:19:22 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:41 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -787,7 +826,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End &amp;&amp; forall(j : turretId_t) TurretProcess(j).Ready))
 </formula>
 			<comment>(Property VII)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:23:41 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:38:38 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -795,7 +834,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] deadlock imply ControllerProcess.Won</formula>
 			<comment>(Properties VI / VIII)
 Query used to check if the selected configuration is a winning configuration. (THE RESULT MUST BE OPPOSITE TO NEXT QUERY)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-13 23:23:43 +0200">
+			<result outcome="failure" type="quality" timestamp="2025-05-16 22:40:16 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -803,7 +842,7 @@ Query used to check if the selected configuration is a winning configuration. (T
 			<formula>A[] deadlock imply ControllerProcess.Lost</formula>
 			<comment>(Properties VI / VIII)
 Query used to check if the selected configuration is a losing configuration. (THE RESULT MUST BE OPPOSITE TO PREVIOUS QUERY)</comment>
-			<result outcome="failure" type="quality" timestamp="2025-05-13 23:24:04 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-16 22:40:32 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
