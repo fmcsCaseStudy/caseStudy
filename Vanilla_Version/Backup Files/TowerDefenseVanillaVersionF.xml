@@ -1,0 +1,718 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Map of the game
+const int MAP_WIDTH = 16;
+const int MAP_HEIGHT = 9;
+
+typedef int[0,1] EnemyType; //0 -&gt; Circle, 1 -&gt; Square
+
+typedef struct {
+    bool active;
+    EnemyType type;
+    int x;
+    int y;
+    int health;
+    int spawnTime;  //Time when enemy spawned (for targeting priority)
+} Enemy;
+
+//Some global setting
+const int NUM_TURRETS = 10;
+const int NUM_CIRCLES = 3;
+const int NUM_SQUARES = 0;
+const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
+const int RETRY = 2;
+
+//Some global strucure
+bool turretState[NUM_TURRETS]; //bool array to save state
+Enemy enemies[NUM_ENEMIES]; //enemy array to store all enemy state
+
+
+//Some channel
+broadcast chan gameStart; //signal to turret to start the game
+broadcast chan posUpdate;//when turret cannt find enemy will wait on posUpdate to rerun Findtarget()
+chan enemySpawning[NUM_ENEMIES];//allow to spwn enemy on map
+
+//Map Definition
+//    0 -&gt; Empty Cell  
+//    1 -&gt; Path (red cells)
+//    2 -&gt; Turret positions (green cells)
+//    3 -&gt; Main Tower (blue cell)
+const int MAP[MAP_HEIGHT][MAP_WIDTH] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 0, 0, 0, 2, 1},
+    {0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 3},
+    {1, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 2, 1},
+    {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};// can be removed, we are using PATHS AS MAP
+
+
+
+typedef struct {
+    int x;
+    int y;
+} Coordinate;
+
+const Coordinate SPAWN_POS = { 0, 0};
+const Coordinate MAIN_TOWER_POS = { 15, 4};
+
+// DO NOT CHANGE THE PATHS ORDER!!!
+const int MAX_PATH_LEN = 14;
+const int PATHS_LEN[5] = { 12, 6, 14, 8, 8 };
+const Coordinate PATHS[5][MAX_PATH_LEN] = {
+    { {  0, 0 }, {  0, 1 }, {  0, 2 }, {  0, 3 }, {  0, 4 }, {  1, 4 }, {  2,  4 }, {  3,  4 }, {  4,  4 }, {  5,  4 }, {  6,  4 }, {  7,  4 }, { -1, -1 }, { -1, -1 } },
+    { {  7, 5 }, {  7, 6 }, {  7, 7 }, {  8, 7 }, {  9, 7 }, { 10, 7 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+    { {  7, 3 }, {  7, 2 }, {  7, 1 }, {  8, 1 }, {  9, 1 }, { 10, 1 }, { 11,  1 }, { 12,  1 }, { 13,  1 }, { 14,  1 }, { 15,  1 }, { 15,  2 }, { 15,  3 }, { 15,  4 } },
+    { { 11, 7 }, { 12, 7 }, { 13, 7 }, { 14, 7 }, { 15, 7 }, { 15, 6 }, { 15,  5 }, { 15,  4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+    { { 10, 6 }, { 10, 5 }, { 10, 4 }, { 11, 4 }, { 12, 4 }, { 13, 4 }, { 14,  4 }, { 15,  4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } }
+};
+//possible path 0-1-3,0-1-4,0-1-2
+
+const int TURRETS_POS_LEN = 7;
+const Coordinate TURRETS_POS[TURRETS_POS_LEN] = {
+    { 2, 3 }, { 5, 5 }, { 8, 2 }, { 8, 6 }, { 11, 5 }, { 14, 2 }, { 14, 6 }
+};
+
+/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Main Tower
+const int MAIN_TOWER_LIFE = 10;
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Enemy
+const EnemyType CIRCLE = 0;
+const EnemyType SQUARE = 1;
+
+const int CIRCLE_SPEED = 1;
+const int CIRCLE_HEALTH = 10;
+const int CIRCLE_DAMAGE = 2;
+const int SQUARE_SPEED = 3;
+const int SQUARE_HEALTH = 20;
+const int SQUARE_DAMAGE = 4;
+
+const int CIRCLE_SPAWN_TIME = 2;
+const int SQUARE_SPAWN_TIME = 3;
+
+
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Constants related to Turret
+typedef int[0,2] TurretType; //0-&gt;Basic, 1-&gt;Cannon, 2-&gt;Sniper
+const TurretType BASIC = 0;
+const TurretType CANNON = 1;
+const TurretType SNIPER = 2;
+
+const int BASIC_RANGE = 2;
+const int BASIC_FIRE_SPEED = 2;
+const int BASIC_DAMAGE = 2;
+const int CANNON_RANGE = 1;
+const int CANNON_FIRE_SPEED = 7;
+const int CANNON_DAMAGE = 5;
+const int SNIPER_RANGE = 4;
+const int SNIPER_FIRE_SPEED = 20;
+const int SNIPER_DAMAGE = 8;
+
+typedef struct {
+    bool placed;
+    TurretType type;
+    int x;
+    int y;
+    int targetEnemy; //Index of the enemy being targeted, -1 if none
+} Turret;
+
+
+/*----------------------------------------------------------------------------------------------------*/
+//Game State Variables
+int mainTowerLife = MAIN_TOWER_LIFE;
+bool gameOver = false;
+bool gameWon = false;
+
+
+
+Turret turrets[10];
+int enemiesDefeated = 0;
+broadcast chan attackTower;
+broadcast chan enemyHit[NUM_ENEMIES];
+
+/*----------------------------------------------------------------------------------------------------*/
+//Helper Functions
+
+//Calculate Manhattan distance between two points
+int distance(int x1, int y1, int x2, int y2) {
+    return abs(x1 - x2) + abs(y1 - y2);
+}
+
+//Check if an enemy is in a turret's range
+bool inRange(int turretX, int turretY, int range, int enemyX, int enemyY) {
+    return distance(turretX, turretY, enemyX, enemyY) &lt;= range;
+}
+
+//Apply damage to an enemy
+void applyDamage(int enemyIndex, int damage) {
+    enemies[enemyIndex].health -= damage;
+}
+
+//Check if a cell is a valid move for an enemy
+bool isValidMove(int x, int y) {
+    if (x &lt; 0 || x &gt;= MAP_WIDTH || y &lt; 0 || y &gt;= MAP_HEIGHT) return false;
+    return MAP[y][x] == 0 || MAP[y][x] == 2; // Path or Main Tower
+}
+
+//Check if a cell is the Main Tower
+bool isMainTower(int x, int y) {
+    return x == MAIN_TOWER_POS.x &amp;&amp; y == MAIN_TOWER_POS.y;
+}
+
+//Place turret
+bool placeTurret(TurretType type, int x, int y) {
+    int i;
+
+    //Check if position is valid for turret placement
+    if (x &lt; 0 || x &gt;= MAP_WIDTH || y &lt; 0 || y &gt;= MAP_HEIGHT) return false;
+    if (MAP[y][x] != 1) return false; // Not a turret position
+    
+    //Check if a turret already exists at the position
+    for (i = 0; i &lt; 10; i++) {
+        if (turrets[i].placed &amp;&amp; turrets[i].x == x &amp;&amp; turrets[i].y == y) {
+            return false;
+        }
+    }
+    
+    //Find an empty slot for turret
+    for (i = 0; i &lt; 10; i++) {
+        if (!turrets[i].placed) {
+            turrets[i].placed = true;
+            turrets[i].type = type;
+            turrets[i].x = x;
+            turrets[i].y = y;
+            turrets[i].targetEnemy = -1;
+            return true;
+        }
+    }
+    
+    return false; //No slot available
+}
+
+</declaration>
+	<template>
+		<name x="5" y="5">MainTower</name>
+		<declaration>int damageReceived = 0; //Track incoming damage from enemies</declaration>
+		<location id="id0" x="-408" y="-34">
+			<name x="-467" y="-51">Alive</name>
+		</location>
+		<location id="id1" x="-102" y="-34">
+			<name x="-110" y="-68">Hit</name>
+			<committed/>
+		</location>
+		<location id="id2" x="101" y="-34">
+			<name x="127" y="-51">Dead</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id3">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-314" y="34">mainTowerLife&gt;0</label>
+			<label kind="assignment" x="-323" y="51">damageReceived=0</label>
+			<nail x="-255" y="34"/>
+		</transition>
+		<transition id="id4">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-59" y="-76">mainTowerLife&lt;=0</label>
+			<label kind="assignment" x="-51" y="-59">gameOver=true</label>
+		</transition>
+		<transition id="id5">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-323" y="-76">damageReceived&gt;0</label>
+			<label kind="assignment" x="-374" y="-59">mainTowerLife-=damageReceived</label>
+		</transition>
+	</template>
+	<template>
+		<name>GameController</name>
+		<declaration>int counterT = 0; // turret
+int counterE = 0; // enemy
+int counterM = 0; // main tower
+int counterS = 0; //square
+int counterC = 0; //circle
+int lastS = 0;
+int lastC = 0;
+clock localTimerC;
+clock localTimerS;
+clock retryTimer = 0;
+
+int findNext(int type) {
+    int i;
+    if(type == CIRCLE) { // wasting a cycle of loop 
+        for(i = lastC; i &lt; NUM_ENEMIES; i++) {
+            if(enemies[i].type == CIRCLE) {
+                if(enemies[i].active == false) {
+                    return i;
+                }
+            }
+        }
+    }
+    else {
+        for(i = lastS; i &lt; NUM_ENEMIES; i++) {
+            if(enemies[i].type == SQUARE) {
+                if(enemies[i].active == false) {
+                    return i;
+                }
+            }
+        }
+    }
+    return -1;//shouldnt happens
+}
+
+
+
+void updateT() {
+    int tmp = 0;
+    int i;
+    for(i = 0; i &lt; NUM_TURRETS; i++ ) {
+        if(turretState[i]) {
+            tmp = tmp + 1;
+        }
+    }
+    counterT = tmp;
+    localTimerS = 0;
+}
+
+void updateE() {
+    counterE = counterE + 1;
+}
+
+void updateM() {
+    counterM = counterM + 1;
+}
+
+void updategameStart() {
+    localTimerC = 0;
+    localTimerS = 0;
+}
+
+void updateS() {
+    counterS = counterS + 1;
+    lastS = findNext(SQUARE);
+    localTimerS = 0;
+}
+
+void updateC() {
+    counterC = counterC + 1;
+    lastC = findNext(CIRCLE);
+    localTimerC = 0;
+}
+
+
+
+
+
+
+</declaration>
+		<location id="id6" x="-926" y="0">
+			<name x="-943" y="17">Start</name>
+			<committed/>
+		</location>
+		<location id="id7" x="-544" y="0">
+			<name x="-620" y="-34">Initialize_Enemy</name>
+		</location>
+		<location id="id8" x="-867" y="0">
+			<name x="-909" y="-34">Initialize_Tower</name>
+		</location>
+		<location id="id9" x="-136" y="0">
+		</location>
+		<location id="id10" x="136" y="0">
+		</location>
+		<init ref="id6"/>
+		<transition id="id11">
+			<source ref="id9"/>
+			<target ref="id10"/>
+		</transition>
+		<transition id="id12">
+			<source ref="id9"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-340" y="178">SQUARE_SPAWN_TIME &gt; localTimerS &amp;&amp; counterS &lt; NUM_SQUARES</label>
+			<label kind="synchronisation" x="-195" y="127">enemySpawning[lastS]!</label>
+			<label kind="assignment" x="-221" y="153">updateS()</label>
+			<nail x="-212" y="127"/>
+			<nail x="-34" y="127"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id9"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-416" y="-221">CIRCLE_SPAWN_TIME &gt; localTimerC &amp;&amp; lastC &lt; NUM_CIRCLES</label>
+			<label kind="synchronisation" x="-204" y="-110">enemySpawning[lastC]!</label>
+			<label kind="assignment" x="-170" y="-144">updateC()</label>
+			<nail x="-51" y="-153"/>
+			<nail x="-212" y="-153"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id7"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-518" y="-59">counterE==NUM_ENEMIES</label>
+			<label kind="synchronisation" x="-433" y="-25">gameStart!</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id7"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-722" y="68">retryTimer &gt; RETRY &amp;&amp; counterE&lt;NUM_ENEMIES</label>
+			<label kind="assignment" x="-561" y="119">updateE()</label>
+			<nail x="-433" y="102"/>
+			<nail x="-629" y="102"/>
+		</transition>
+		<transition id="id16">
+			<source ref="id8"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-867" y="-93">retryTimer &gt; RETRY &amp;&amp; counterT&lt;NUM_TURRETS</label>
+			<label kind="assignment" x="-901" y="-153">updateT()</label>
+			<nail x="-782" y="-110"/>
+			<nail x="-943" y="-110"/>
+		</transition>
+		<transition id="id17">
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-833" y="8">counterT==NUM_TURRETS</label>
+		</transition>
+		<transition id="id18">
+			<source ref="id6"/>
+			<target ref="id8"/>
+		</transition>
+	</template>
+	<template>
+		<name>TurretTemplate</name>
+		<parameter>int turretId, int turretType</parameter>
+		<declaration>int fireRate;            //How fast turret instance can fire
+int damage;              //Damage dealt by turret instance
+int range;               //Attack range of turret instance
+clock fireTimer = 0;         //Timer for tracking reload time
+clock retryTimer = 0;
+int targetEnemy = -1;
+
+void resetRetry() {
+    retryTimer = 0;
+}
+
+//Set turret instance stats based on type of turret
+void setTurretStats() {
+    if (turretType == BASIC) {
+        fireRate = BASIC_FIRE_SPEED;
+        damage = BASIC_DAMAGE;
+        range = BASIC_RANGE;
+    } else if (turretType == CANNON) {
+        fireRate = CANNON_FIRE_SPEED;
+        damage = CANNON_DAMAGE;
+        range = CANNON_RANGE;
+    } else {
+        fireRate = SNIPER_FIRE_SPEED;
+        damage = SNIPER_DAMAGE;
+        range = SNIPER_RANGE;
+    }
+    turretState[turretId] = true;
+}
+
+//Find the best target for a turret
+int findTarget(int turretIndex) {
+    int tx = turrets[turretIndex].x;
+    int ty = turrets[turretIndex].y;
+    int bestTarget = -1;
+    int minDistance = MAP_WIDTH + MAP_HEIGHT; //Initialize with a large value
+    int earliestSpawn = -1; //For enemies at same distance
+    int i;
+
+    for ( i = 0; i &lt; NUM_ENEMIES; i++) {
+        if (enemies[i].active &amp;&amp; enemies[i].health &gt; 0 &amp;&amp; inRange(tx, ty, range, enemies[i].x, enemies[i].y)) {
+            int d = distance(tx, ty, enemies[i].x, enemies[i].y);
+            if ( d &lt; minDistance || 
+                (d == minDistance &amp;&amp; enemies[i].spawnTime &gt; earliestSpawn) || 
+                (d == minDistance &amp;&amp; enemies[i].spawnTime == earliestSpawn &amp;&amp; enemies[i].type == SQUARE)
+               ) {
+                minDistance = d;
+                earliestSpawn = enemies[i].spawnTime;
+                bestTarget = i;
+            }
+        }
+    }
+     
+    return bestTarget;
+}
+</declaration>
+		<location id="id19" x="-1173" y="8">
+			<name x="-1215" y="-26">Not_Placed</name>
+			<committed/>
+		</location>
+		<location id="id20" x="-1003" y="8">
+			<name x="-1013" y="-26">Placed</name>
+		</location>
+		<location id="id21" x="-875" y="8">
+			<name x="-885" y="-26">Idle</name>
+		</location>
+		<location id="id22" x="-654" y="8">
+			<name x="-664" y="-26">Firing</name>
+			<committed/>
+		</location>
+		<location id="id23" x="-765" y="161">
+			<name x="-775" y="127">Waiting_enemies</name>
+		</location>
+		<init ref="id19"/>
+		<transition id="id24">
+			<source ref="id22"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-1045" y="-238">targetEnemy != -1 &amp;&amp; enemies[targetEnemy].health &gt; 0</label>
+			<label kind="synchronisation" x="-849" y="-204">enemyHit[targetEnemy]!</label>
+			<label kind="assignment" x="-884" y="-178">applyDamage(targetEnemy, damage)</label>
+			<nail x="-671" y="-187"/>
+			<nail x="-867" y="-187"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id23"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-909" y="68">posUpdate?</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id22"/>
+			<target ref="id23"/>
+			<label kind="guard" x="-765" y="85">targetEnemy  == -1 || enemies[targetEnemy].health &lt; 0</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id21"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-850" y="-68">fireTimer&gt;=fireRate</label>
+			<label kind="assignment" x="-850" y="-93">targetEnemy=findTarget(turretId)</label>
+		</transition>
+		<transition id="id28">
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-986" y="-68">gameStart?</label>
+		</transition>
+		<transition id="id29">
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="assignment" x="-1155" y="8">setTurretStats()</label>
+		</transition>
+	</template>
+	<template>
+		<name>EnemyTemplate</name>
+		<parameter>int enemyId, int enemyT</parameter>
+		<declaration>int step;
+int path;
+
+int health;              //Current health of the enemy instance
+int speed;               //Movement speed of the enemy instance
+int damage;              //Damage enemy instance deals to the tower
+
+bool canMove = false;    //Flag to control movement
+int x;                   //Current X position
+int y;                   //Current Y position
+clock moveTimer;         //Timer for controlling movement speed
+
+int damageReceived;      //Damage Received by the enemy instance to the main tower
+
+int[0,4] currentPath;    //0-&gt;PATH_1, 1-&gt;PATH_1_1, 2-&gt;PATH_1_2, 3-&gt;PATH_1_1_1, 4-&gt;PATH_1_1_2
+int posIdx;              //Position in the path
+
+
+void setEnemyStats() {
+    step = 0;
+    path = 0;
+    enemies[enemyId].x = PATHS[path][step].x;
+    enemies[enemyId].y = PATHS[path][step].y;
+    enemies[enemyId].active = false;
+    enemies[enemyId].type = enemyT;
+    enemies[enemyId].spawnTime = -1;
+}
+
+void move(int i) {
+    if(step &lt; PATHS_LEN[path]){
+        step = step + 1; //just increment else change path
+    }
+    else{
+        if(path == 0 || path == 1) {
+            path = path + 1 + i;
+        }
+        if(path == 1) {
+            path = path + 2 + i;
+        }
+        step = 0;
+        enemies[enemyId].x = PATHS[path][step].x;
+        enemies[enemyId].y = PATHS[path][step].y;
+    }
+
+}
+
+</declaration>
+		<location id="id30" x="-1377" y="-493">
+			<name x="-1428" y="-527">Not_Spawned</name>
+			<committed/>
+		</location>
+		<location id="id31" x="-722" y="-493">
+			<name x="-790" y="-527">Waiting</name>
+		</location>
+		<location id="id32" x="-450" y="-493">
+			<name x="-442" y="-527">Moving</name>
+		</location>
+		<location id="id33" x="-144" y="-493">
+			<name x="-178" y="-527">Attacking</name>
+		</location>
+		<location id="id34" x="-586" y="-663">
+			<name x="-603" y="-697">Dead</name>
+			<committed/>
+		</location>
+		<location id="id35" x="195" y="-493">
+			<name x="161" y="-527">Left_Map</name>
+			<committed/>
+		</location>
+		<location id="id36" x="-586" y="-289">
+			<name x="-594" y="-272">Hit</name>
+			<committed/>
+		</location>
+		<location id="id37" x="-1173" y="-501">
+			<name x="-1183" y="-535">Initialized</name>
+		</location>
+		<location id="id38" x="-1003" y="-518">
+			<name x="-1013" y="-552">Idle</name>
+		</location>
+		<init ref="id30"/>
+		<transition id="id39">
+			<source ref="id38"/>
+			<target ref="id31"/>
+		</transition>
+		<transition id="id40">
+			<source ref="id37"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-1173" y="-578">enemySpawning[enemyId]?</label>
+		</transition>
+		<transition id="id41">
+			<source ref="id30"/>
+			<target ref="id37"/>
+			<label kind="assignment" x="-1360" y="-595">setEnemyStats()</label>
+		</transition>
+		<transition id="id42">
+			<source ref="id31"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-892" y="-697">health&lt;=0</label>
+			<label kind="assignment" x="-969" y="-646">enemies[enemyId].active=false,
+enemiesDefeated++</label>
+			<nail x="-722" y="-663"/>
+		</transition>
+		<transition id="id43">
+			<source ref="id36"/>
+			<target ref="id32"/>
+			<label kind="guard" x="-441" y="-306">health&gt;0 &amp;&amp; canMove</label>
+			<label kind="assignment" x="-416" y="-289">moveTimer=0</label>
+			<nail x="-450" y="-289"/>
+		</transition>
+		<transition id="id44">
+			<source ref="id32"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="-501" y="-416">enemyHit[enemyId]?</label>
+		</transition>
+		<transition id="id45">
+			<source ref="id36"/>
+			<target ref="id31"/>
+			<label kind="guard" x="-705" y="-289">health&gt;0</label>
+			<nail x="-722" y="-289"/>
+		</transition>
+		<transition id="id46">
+			<source ref="id31"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="-816" y="-416">enemyHit[enemyId]?</label>
+		</transition>
+		<transition id="id47">
+			<source ref="id32"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-442" y="-629">health&lt;=0</label>
+			<label kind="assignment" x="-442" y="-612">enemies[enemyId].active=false,
+enemiesDefeated++</label>
+			<nail x="-450" y="-663"/>
+		</transition>
+		<transition id="id48">
+			<source ref="id33"/>
+			<target ref="id35"/>
+			<label kind="synchronisation" x="-25" y="-518">attackTower!</label>
+			<label kind="assignment" x="-59" y="-484">mainTowerLife-=damage,
+damageReceived=damage</label>
+		</transition>
+		<transition id="id49">
+			<source ref="id32"/>
+			<target ref="id31"/>
+			<label kind="guard" x="-629" y="-450">!canMove</label>
+			<nail x="-535" y="-450"/>
+			<nail x="-646" y="-450"/>
+		</transition>
+		<transition id="id50">
+			<source ref="id32"/>
+			<target ref="id33"/>
+			<label kind="guard" x="-365" y="-518">isMainTower(x,y)</label>
+		</transition>
+		<transition id="id51">
+			<source ref="id31"/>
+			<target ref="id32"/>
+			<label kind="select" x="-637" y="-578">i : int[0,1]</label>
+			<label kind="guard" x="-697" y="-561">moveTimer&gt;=speed &amp;&amp; canMove</label>
+			<label kind="assignment" x="-637" y="-527">moveTimer=0,
+move(i)</label>
+			<nail x="-646" y="-535"/>
+			<nail x="-535" y="-535"/>
+		</transition>
+	</template>
+	<system>gameController = GameController();
+mainTower = MainTower();
+
+t0 = TurretTemplate(0, BASIC);
+t1 = TurretTemplate(1, BASIC);
+t2 = TurretTemplate(2, BASIC);
+t3 = TurretTemplate(3, BASIC);
+t4 = TurretTemplate(4, BASIC);
+t5 = TurretTemplate(5, BASIC);
+t6 = TurretTemplate(6, BASIC);
+t7 = TurretTemplate(7, BASIC);
+t8 = TurretTemplate(8, BASIC);
+t9 = TurretTemplate(9, BASIC);
+e0 = EnemyTemplate(0, CIRCLE);
+e1 = EnemyTemplate(1, CIRCLE);
+e2 = EnemyTemplate(2, CIRCLE);
+
+
+//processes that compose the system
+system gameController, t0, t1, t2, t3,t4,t5,t6,t7,t8,t9,e0,e1,e2, mainTower; </system>
+	<queries>
+		<query>
+			<formula>A[] not deadlock</formula>
+			<comment>The system never reaches a deadlock state</comment>
+			<result outcome="failure" type="quality" timestamp="2025-04-23 10:43:23 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; forall (i : id_be) (B(i).Attacking or B(i).Left_Map)</formula>
+			<comment>Eventually, all enemies either attack the Main Tower or leave the map</comment>
+			<result outcome="failure" type="quality" timestamp="2025-04-23 10:43:33 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] forall(i : id_be) (varE[i] == CIRCLE imply (B(i).Attacking or B(i).Left_Map) imply B(i).moveTimer &lt;= 14)</formula>
+			<comment>All Circles reach the tower or exit within 14 time units</comment>
+			<result outcome="success" type="quality" timestamp="2025-04-23 10:43:35 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] forall(i : id_be) (varE[i] == SQUARE imply (B(i).Attacking or B(i).Left_Map) imply B(i).moveTimer &lt;= 42)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-04-23 10:43:37 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] forall(i : id_be) MAP[enemies[i].y][enemies[i].x] == 1 or isMainTower(enemies[i].x, enemies[i].y)</formula>
+			<comment>Enemies are always either on a path or at the Main Tower</comment>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
