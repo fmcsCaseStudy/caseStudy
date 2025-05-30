@@ -140,7 +140,7 @@ const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 3;
+const int[0, NUM_CONFIGURATIONS - 1] SELECTED_CONFIGURATION = 1;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
@@ -788,35 +788,35 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End))
 </formula>
 			<comment>(Property I)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:24 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:43:00 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A&lt;&gt; forall(i : enemyId_t) isMainTower(enemies[i].pos)</formula>
 			<comment>(Property II)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:30 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:43:07 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == CIRCLE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * CIRCLE_SPEED)))</formula>
 			<comment>(Property III)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:33 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:43:11 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) ((enemies[i].type == SQUARE &amp;&amp; !isMainTower(enemies[i].pos)) imply (EnemyProcess(i).spawnTimer &lt;= (PATH_LEN * SQUARE_SPEED)))</formula>
 			<comment>(Property IV)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:38 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:43:16 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] forall(i : enemyId_t) isPath(enemies[i].pos)</formula>
 			<comment>(Property V)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:34:41 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:43:20 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -828,7 +828,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] (deadlock imply ((ControllerProcess.Won || ControllerProcess.Lost) &amp;&amp; forall(i : enemyId_t) EnemyProcess(i).End &amp;&amp; forall(j : turretId_t) TurretProcess(j).Ready))
 </formula>
 			<comment>(Property VII)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:38:38 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:45:08 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -836,7 +836,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 			<formula>A[] deadlock imply ControllerProcess.Won</formula>
 			<comment>(Properties VI / VIII)
 Query used to check if the selected configuration is a winning configuration. (THE RESULT MUST BE OPPOSITE TO NEXT QUERY)</comment>
-			<result outcome="failure" type="quality" timestamp="2025-05-16 22:40:16 +0200">
+			<result outcome="success" type="quality" timestamp="2025-05-30 14:45:13 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -844,7 +844,7 @@ Query used to check if the selected configuration is a winning configuration. (T
 			<formula>A[] deadlock imply ControllerProcess.Lost</formula>
 			<comment>(Properties VI / VIII)
 Query used to check if the selected configuration is a losing configuration. (THE RESULT MUST BE OPPOSITE TO PREVIOUS QUERY)</comment>
-			<result outcome="success" type="quality" timestamp="2025-05-16 22:40:32 +0200">
+			<result outcome="failure" type="quality" timestamp="2025-05-30 14:45:20 +0200">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
