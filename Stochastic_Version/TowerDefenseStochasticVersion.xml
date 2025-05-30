@@ -294,28 +294,28 @@ void spawnEnemy(EnemyType type) {
 
 </declaration>
 		<location id="id0" x="680" y="-476">
-			<name x="646" y="-518">Waiting</name>
-			<label kind="comments" x="552" y="-850">&gt;&gt;&gt; Waiting &lt;&lt;&lt;
+			<name x="595" y="-493">Waiting</name>
+			<label kind="comments" x="561" y="-884">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Waiting &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 Controller remains in wait
 state until the end of game
 is reached.</label>
 		</location>
 		<location id="id1" x="170" y="-476">
-			<name x="196" y="-476">Spawn_Enemy</name>
-			<label kind="invariant" x="221" y="-450">(circlesSpawned==NUM_CIRCLES || 
+			<name x="51" y="-476">Spawn_Enemy</name>
+			<label kind="invariant" x="213" y="-518">(circlesSpawned==NUM_CIRCLES || 
  circleSpawnTimer&lt;=CIRCLE_SPAWN_TIME) &amp;&amp;
 (squaresSpawned==NUM_SQUARES || 
  squareSpawnTimer&lt;=SQUARE_SPAWN_TIME)</label>
-			<label kind="comments" x="59" y="-850">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Spawn_Enemy &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="68" y="-884">&gt;&gt;&gt;&gt; Spawn_Enemy &lt;&lt;&lt;&lt;
 
-State in which rest of the
-remaining enemies are 
-spawned.</label>
+State in which rest of
+the remaining enemies
+are spawned.</label>
 		</location>
 		<location id="id2" x="-748" y="-476">
 			<name x="-799" y="-518">Place_Turret</name>
-			<label kind="comments" x="-841" y="-875">&gt;&gt;&gt;&gt;&gt;&gt;&gt; Place_Turret &lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-875" y="-884">&gt;&gt;&gt;&gt;&gt;&gt;&gt; Place_Turret &lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 At each iteration:
 - it setups all the variables
@@ -335,7 +335,7 @@ At each iteration:
 		</location>
 		<location id="id5" x="-374" y="-476">
 			<name x="-357" y="-476">Initial_Enemies</name>
-			<label kind="comments" x="-510" y="-867">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Initial_Enemies &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-527" y="-884">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Initial_Enemies &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 It spawns the first two enemies
 which must spawn at time 0.
@@ -344,33 +344,43 @@ it is targeted first
 (To respect targeting priorities).</label>
 			<committed/>
 		</location>
-		<location id="id6" x="918" y="-544">
-			<name x="908" y="-578">Won</name>
+		<location id="id6" x="986" y="-510">
+			<name x="969" y="-552">Won</name>
+			<label kind="comments" x="884" y="-884">&gt;&gt;&gt;&gt;&gt; Won + Lost &lt;&lt;&lt;&lt;&lt;
+
+Final states reached at
+the end of the game.
+They indicate the
+configuration's result.</label>
 		</location>
-		<location id="id7" x="918" y="-382">
-			<name x="908" y="-416">Lost</name>
+		<location id="id7" x="986" y="-442">
+			<name x="969" y="-425">Lost</name>
 		</location>
 		<init ref="id2"/>
 		<transition id="id8">
 			<source ref="id0"/>
 			<target ref="id7"/>
-			<label kind="guard" x="731" y="-399">mainTowerLife&lt;=0</label>
+			<label kind="guard" x="799" y="-433">mainTowerLife&lt;=0</label>
+			<nail x="748" y="-442"/>
 		</transition>
 		<transition id="id9">
 			<source ref="id0"/>
 			<target ref="id6"/>
-			<label kind="guard" x="705" y="-595">activeEnemies==0 &amp;&amp;
+			<label kind="guard" x="782" y="-552">activeEnemies==0 &amp;&amp;
 mainTowerLife&gt;0</label>
+			<nail x="748" y="-510"/>
 		</transition>
 		<transition id="id10">
 			<source ref="id4"/>
 			<target ref="id0"/>
-			<label kind="guard" x="188" y="-408">enemiesSpawned==NUM_ENEMIES</label>
+			<label kind="guard" x="306" y="-297">enemiesSpawned==NUM_ENEMIES</label>
+			<nail x="680" y="-272"/>
 		</transition>
 		<transition id="id11">
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="382" y="-671">enemiesSpawned==NUM_ENEMIES</label>
+			<label kind="guard" x="306" y="-671">enemiesSpawned==NUM_ENEMIES</label>
+			<nail x="680" y="-680"/>
 		</transition>
 		<transition id="id12">
 			<source ref="id5"/>
@@ -404,7 +414,7 @@ squaresSpawned!=0</label>
 		<transition id="id16">
 			<source ref="id3"/>
 			<target ref="id1"/>
-			<label kind="guard" x="153" y="-578">enemiesSpawned!=NUM_ENEMIES</label>
+			<label kind="guard" x="213" y="-595">enemiesSpawned!=NUM_ENEMIES</label>
 			<nail x="204" y="-646"/>
 			<nail x="204" y="-510"/>
 		</transition>
@@ -421,7 +431,7 @@ circleSpawnTimer==CIRCLE_SPAWN_TIME</label>
 		<transition id="id18">
 			<source ref="id4"/>
 			<target ref="id1"/>
-			<label kind="guard" x="204" y="-408">enemiesSpawned!=NUM_ENEMIES</label>
+			<label kind="guard" x="213" y="-391">enemiesSpawned!=NUM_ENEMIES</label>
 			<nail x="204" y="-306"/>
 			<nail x="204" y="-442"/>
 		</transition>
@@ -544,40 +554,41 @@ void selectTurretToAwaken() {
 }</declaration>
 		<location id="id21" x="-510" y="-68">
 			<name x="-552" y="-110">Not_Spawned</name>
-			<label kind="comments" x="-722" y="-425">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Not_Spawned &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-629" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt; Not_Spawned &lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
-Used to for wait the initialization
-signal. Once received, it resets timers.</label>
+Used to wait for the
+initialization signal. Once
+received, it resets timers.</label>
 		</location>
 		<location id="id22" x="-170" y="-68">
 			<name x="-153" y="-59">Targeted</name>
-			<label kind="comments" x="-331" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Targeted + Send_Signal &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-348" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Targeted + Send_Signal &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 It checks if enemy can be targeted by any
 ready turret. If yes, at each iteration,
 it sends a signal to wake up the turret.</label>
 			<committed/>
 		</location>
-		<location id="id23" x="170" y="-68">
-			<name x="136" y="-119">Waiting</name>
-			<label kind="exponentialrate" x="178" y="-42">10:speed()</label>
-			<label kind="comments" x="42" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Waiting &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+		<location id="id23" x="204" y="-68">
+			<name x="170" y="-119">Waiting</name>
+			<label kind="exponentialrate" x="162" y="-102">10:speed()</label>
+			<label kind="comments" x="51" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Waiting &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 Used to wait for the moving period.
 In the meantime, it checks
 if enemy is still alive.</label>
 		</location>
-		<location id="id24" x="170" y="102">
-			<name x="145" y="119">Moving</name>
-			<label kind="comments" x="26" y="170">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Moving &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+		<location id="id24" x="204" y="102">
+			<name x="179" y="119">Moving</name>
+			<label kind="comments" x="43" y="170">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Moving &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 It updates the enemy's position
 and, if necessary, it selects a path.</label>
 			<committed/>
 		</location>
-		<location id="id25" x="612" y="-68">
-			<name x="595" y="-110">End</name>
-			<label kind="comments" x="485" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; End &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+		<location id="id25" x="646" y="-68">
+			<name x="629" y="-110">End</name>
+			<label kind="comments" x="502" y="-442">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; End &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 Final state, enemy is dead or
 has reached the Main Tower.
@@ -587,10 +598,10 @@ Enemy can't be targeted anymore.</label>
 			<name x="-212" y="-314">Send_Signal</name>
 			<committed/>
 		</location>
-		<location id="id27" x="612" y="102">
-			<name x="578" y="119">Attacking</name>
-			<label kind="exponentialrate" x="602" y="136">10:speed()</label>
-			<label kind="comments" x="476" y="170">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Attacking &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+		<location id="id27" x="646" y="102">
+			<name x="612" y="119">Attacking</name>
+			<label kind="exponentialrate" x="612" y="136">10:speed()</label>
+			<label kind="comments" x="476" y="170">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Attacking &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 Enemy attack the Main Tower and wait
 for the moving period to leave the map</label>
@@ -599,17 +610,17 @@ for the moving period to leave the map</label>
 		<transition id="id28">
 			<source ref="id27"/>
 			<target ref="id25"/>
-			<label kind="assignment" x="518" y="8">deactive()</label>
+			<label kind="assignment" x="553" y="9">deactive()</label>
 		</transition>
 		<transition id="id29">
 			<source ref="id23"/>
 			<target ref="id25"/>
-			<label kind="guard" x="255" y="-93">health()&lt;=0 || mainTowerLife &lt;= 0</label>
+			<label kind="guard" x="289" y="-93">health()&lt;=0 || mainTowerLife &lt;= 0</label>
 		</transition>
 		<transition id="id30">
 			<source ref="id26"/>
 			<target ref="id22"/>
-			<label kind="synchronisation" x="-467" y="-178">turretAwakening[turretToAwaken]!</label>
+			<label kind="synchronisation" x="-493" y="-178">turretAwakening[turretToAwaken]!</label>
 			<nail x="-204" y="-238"/>
 			<nail x="-204" y="-102"/>
 		</transition>
@@ -624,33 +635,33 @@ for the moving period to leave the map</label>
 		<transition id="id32">
 			<source ref="id24"/>
 			<target ref="id27"/>
-			<label kind="guard" x="315" y="111">isMainTower(pos())</label>
-			<label kind="assignment" x="357" y="128">attack()</label>
+			<label kind="guard" x="349" y="111">isMainTower(pos())</label>
+			<label kind="assignment" x="391" y="128">attack()</label>
 		</transition>
 		<transition id="id33">
 			<source ref="id24"/>
 			<target ref="id22"/>
-			<label kind="guard" x="-76" y="111">!isMainTower(pos())</label>
-			<label kind="assignment" x="-85" y="128">findTurretsToAwaken()</label>
+			<label kind="guard" x="-68" y="111">!isMainTower(pos())</label>
+			<label kind="assignment" x="-76" y="128">findTurretsToAwaken()</label>
 			<nail x="-170" y="102"/>
 		</transition>
 		<transition id="id34">
 			<source ref="id23"/>
 			<target ref="id24"/>
-			<label kind="select" x="179" y="17">i : int[0,1]</label>
-			<label kind="guard" x="179" y="-17">health()&gt;0</label>
-			<label kind="assignment" x="179" y="34">move(i)</label>
+			<label kind="select" x="213" y="9">i : int[0,1]</label>
+			<label kind="guard" x="213" y="-8">health()&gt;0</label>
+			<label kind="assignment" x="213" y="26">move(i)</label>
 		</transition>
 		<transition id="id35">
 			<source ref="id22"/>
 			<target ref="id23"/>
-			<label kind="guard" x="-85" y="-93">numTurretsToAwaken==0</label>
+			<label kind="guard" x="-76" y="-93">numTurretsToAwaken==0</label>
 		</transition>
 		<transition id="id36">
 			<source ref="id21"/>
 			<target ref="id22"/>
-			<label kind="synchronisation" x="-433" y="-59">enemySpawning[enemyId]?</label>
-			<label kind="assignment" x="-425" y="-42">initEnemy(),
+			<label kind="synchronisation" x="-442" y="-59">enemySpawning[enemyId]?</label>
+			<label kind="assignment" x="-433" y="-42">initEnemy(),
 findTurretsToAwaken()</label>
 		</transition>
 	</template>
@@ -699,14 +710,14 @@ void checkEnemy() {
 </declaration>
 		<location id="id37" x="-884" y="-68">
 			<name x="-926" y="-110">Not_Placed</name>
-			<label kind="comments" x="-1028" y="-221">&gt;&gt;&gt;&gt;&gt; Not_Placed &lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-986" y="-238">&gt;&gt;&gt;&gt;&gt; Not_Placed &lt;&lt;&lt;&lt;&lt;
 
 Used to wait for the
 initialization signal.</label>
 		</location>
 		<location id="id38" x="-510" y="-68">
 			<name x="-493" y="-76">Firing</name>
-			<label kind="comments" x="-340" y="-102">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Firing &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-374" y="-119">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Firing &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 It checks if a target is available:
 - if yes, it shoots;
@@ -715,15 +726,15 @@ It checks if a target is available:
 		</location>
 		<location id="id39" x="-510" y="-272">
 			<name x="-535" y="-323">Reload</name>
-			<label kind="exponentialrate" x="-459" y="-221">1:fireSpeed()</label>
-			<label kind="comments" x="-629" y="-433">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Reload &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="exponentialrate" x="-569" y="-306">1:fireSpeed()</label>
+			<label kind="comments" x="-603" y="-442">&gt;&gt;&gt;&gt;&gt;&gt; Reload &lt;&lt;&lt;&lt;&lt;&lt;
 
 Used to wait for the 
 reloading period.</label>
 		</location>
 		<location id="id40" x="-510" y="136">
 			<name x="-527" y="153">Ready</name>
-			<label kind="comments" x="-637" y="204">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Ready &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+			<label kind="comments" x="-637" y="204">&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Ready &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
 
 Wait for an enemy to enter
 inside the range to shoot it.</label>
@@ -739,15 +750,15 @@ inside the range to shoot it.</label>
 		<transition id="id42">
 			<source ref="id40"/>
 			<target ref="id38"/>
-			<label kind="synchronisation" x="-765" y="17">turretAwakening[turretId]?</label>
-			<label kind="assignment" x="-705" y="34">checkEnemy()</label>
+			<label kind="synchronisation" x="-782" y="17">turretAwakening[turretId]?</label>
+			<label kind="assignment" x="-722" y="34">checkEnemy()</label>
 			<nail x="-544" y="102"/>
 			<nail x="-544" y="-34"/>
 		</transition>
 		<transition id="id43">
 			<source ref="id39"/>
 			<target ref="id38"/>
-			<label kind="assignment" x="-688" y="-170">checkEnemy()</label>
+			<label kind="assignment" x="-663" y="-187">checkEnemy()</label>
 			<nail x="-544" y="-238"/>
 			<nail x="-544" y="-102"/>
 		</transition>
