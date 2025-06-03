@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
 <nta>
-	<declaration>clock gameTimer;    //Just for debug
+	<declaration>clock gameTimer;    // Just for debug
 
 /*----------------------------------------------------------------------------------------------------*/
-//Constants and declarations related to the map of the game
+// Constants and declarations related to the map of the game
 typedef struct {
     int x;
     int y;
@@ -13,7 +13,7 @@ typedef struct {
 const Coordinate SPAWN_POS = { 0, 0 };
 const Coordinate MAIN_TOWER_POS = { 15, 4 };
 
-//Possible paths are 0-1-3 / 0-1-4 / 0-2
+// Possible paths are 0-1-3 / 0-1-4 / 0-2
 const int PATH_LEN = 25;
 const int NUM_SEGMENTS = 5;
 const int MAX_SEGMENTS_LEN = 14;
@@ -30,8 +30,8 @@ const int MAX_TURRETS = 7;
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//Constants and declarations related to Enemy
-typedef int[0,1] EnemyType;    //0 -&gt; Circle, 1 -&gt; Square
+// Constants and declarations related to Enemy
+typedef int[0,1] EnemyType;    // 0 -&gt; Circle, 1 -&gt; Square
 const EnemyType CIRCLE = 0;
 const EnemyType SQUARE = 1;
 
@@ -42,7 +42,7 @@ typedef struct {
     int speed;
     int health;
     int damage;
-    int spawnTime;              //Time when enemy spawned (for targeting priority)
+    int spawnTime;              // Time when enemy spawned (for targeting priority)
 } Enemy;
 
 const int CIRCLE_SPEED      =  1;
@@ -57,9 +57,9 @@ const int SQUARE_SPAWN_TIME =  3;
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//Constants and declarations related to Turret
-typedef int[-1,2] TurretType;    //-1 -&gt; NONE, 0 -&gt; Basic, 1 -&gt; Cannon, 2 -&gt; Sniper
-const TurretType NONE   = -1;    //used to fill the gaps
+// Constants and declarations related to Turret
+typedef int[-1,2] TurretType;    // -1 -&gt; NONE, 0 -&gt; Basic, 1 -&gt; Cannon, 2 -&gt; Sniper
+const TurretType NONE   = -1;    // Used to fill the gaps
 const TurretType BASIC  =  0;
 const TurretType CANNON =  1;
 const TurretType SNIPER =  2;
@@ -86,7 +86,7 @@ const int SNIPER_DAMAGE     =  8;
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//Game configuration (VANILLA VERSION)
+// Game configuration (VANILLA VERSION)
 const int NUM_CIRCLES = 300;
 const int NUM_SQUARES = 400;
 const int NUM_ENEMIES = NUM_CIRCLES + NUM_SQUARES;
@@ -99,25 +99,25 @@ typedef struct {
 
 const int NUM_CONFIGURATIONS = 4;
 const TurretsConfiguration TURRETS_CONFIGUTATIONS[NUM_CONFIGURATIONS] = {
-    //No turrets (PROPERTIES I-V)
+    // No turrets (PROPERTIES I-V)
     {
         0,
         { NONE, NONE, NONE, NONE, NONE, NONE, NONE },
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } }
     },
-    //Default (PROPERTY VI) - Winning
+    // Default (PROPERTY VI) - Winning
     {
         7,
         { SNIPER, BASIC, CANNON, CANNON, SNIPER, CANNON, CANNON },
         { { 2, 3 }, { 5, 5 }, { 8, 2 }, { 8, 6 }, { 11, 5 }, { 14, 2 }, { 14, 6 } }
     },
-    //Custom 1 (PROPERTY VIII) - Winning
+    // Custom 1 (PROPERTY VIII) - Winning
     {
         5,
         { BASIC, BASIC, SNIPER, CANNON, SNIPER, NONE, NONE },
         { { 5, 5 }, { 8, 6 }, { 2, 3 }, { 11, 5 }, { 14, 2 }, { -1, -1 }, { -1, -1 } }
     },
-    //Custom 2 (PROPERTY VIII) - Losing
+    // Custom 2 (PROPERTY VIII) - Losing
     {
         4,
         { CANNON, CANNON, CANNON, CANNON, NONE, NONE, NONE },
@@ -164,18 +164,21 @@ int activeEnemies = NUM_ENEMIES;
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//Global state and channels
+// Global state and channels
 Enemy enemies[NUM_ENEMIES];
 Turret turrets[MAX_TURRETS];
-broadcast chan enemySpawning[NUM_ENEMIES];             //channel to spawn enemy
-broadcast chan turretPlacing[MAX_TURRETS];             //channel to place turrets
-urgent broadcast chan turretAwakening[MAX_TURRETS];    //channel to awake turrets
+broadcast chan enemySpawning[NUM_ENEMIES];             // Channel to spawn enemy
+broadcast chan turretPlacing[MAX_TURRETS];             // Channel to place turrets
+urgent broadcast chan turretAwakening[MAX_TURRETS];    // Channel to awake turrets
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//HELPER FUNCTIONS
+// HELPER FUNCTIONS
 
-//Function to calculate Chebyshev distance between two points
+// Function to calculate Chebyshev distance between two points
+// @param pos1    The coordinate of the first entity
+// @param pos2    The coordinate of the second entity
+// @return        The maximum distance between the X-axis and the Y-axis
 int distance(Coordinate pos1, Coordinate pos2) {
     int x = abs(pos1.x - pos2.x);
     int y = abs(pos1.y - pos2.y);
@@ -183,20 +186,24 @@ int distance(Coordinate pos1, Coordinate pos2) {
     return x &gt;? y;
 }
 
-//Function to check if the coordinate is the Main Tower's coordinate
+// Function to check if the coordinate is the Main Tower's coordinate
+// @param pos    The coordinate of the entity
+// @return       True if the coordinate of the entity is the Main Tower's coordinate, otherwise False
 bool isMainTower(Coordinate pos) {
     return distance(pos, MAIN_TOWER_POS) == 0;
 }
 
-//Function to check if the coordinate is on path or not
+// Function to check if the coordinate is on path or not
+// @param pos    The coordinate of the enemy
+// @return       True if the coordinate of the enemy is on path, otherwise False
 bool isPath(Coordinate pos){
-    //Vertical segments
+    // Vertical segments
     if(pos.x ==  0 &amp;&amp; 0&lt;=pos.y &amp;&amp; pos.y&lt;=4) return true;
     if(pos.x ==  7 &amp;&amp; 1&lt;=pos.y &amp;&amp; pos.y&lt;=7) return true;
     if(pos.x == 10 &amp;&amp; 4&lt;=pos.y &amp;&amp; pos.y&lt;=7) return true;
     if(pos.x == 15 &amp;&amp; 1&lt;=pos.y &amp;&amp; pos.y&lt;=7) return true;
 
-    //Horizontal segments
+    // Horizontal segments
     if(pos.y == 1 &amp;&amp;  7&lt;=pos.x &amp;&amp; pos.x&lt;=15) return true;
     if(pos.y == 4 &amp;&amp;  0&lt;=pos.x &amp;&amp; pos.x&lt;= 7) return true;
     if(pos.y == 4 &amp;&amp; 10&lt;=pos.x &amp;&amp; pos.x&lt;=15) return true;
@@ -205,11 +212,13 @@ bool isPath(Coordinate pos){
     return false;        
 }
 
-//Function used to find a target for the turret
+// Function used to find a target for the turret
+// @param turretId    The ID of the turret that has to find a target
+// @return            The ID of the targeted enemy if it exists, otherwise -1
 int findTarget(int turretId) {
-    int minDistance = turrets[turretId].range;    //Initialized with the highest acceptable value
-    int maxSpawnTime = -1;                        //Initialized with the highest not possible value
-    int targetId = -1;                            //The ID of the enemy targeted
+    int minDistance = turrets[turretId].range;    // Initialized with the highest acceptable value
+    int maxSpawnTime = -1;                        // Initialized with the highest not possible value
+    int targetId = -1;                            // The ID of the enemy targeted
     int i;
 
     for (i = 0; i &lt; NUM_ENEMIES; i++) {
@@ -231,16 +240,16 @@ int findTarget(int turretId) {
 }</declaration>
 	<template>
 		<name>Controller</name>
-		<declaration>int turretsPlaced  = 0;      //Track the number of turrets that have been placed
-int circlesSpawned = 0;      //Track the number of circles that have been spawned
-int squaresSpawned = 0;      //Track the number of squares that have been spawned
-int enemiesSpawned = 0;      //Track the number of enemies that have been spawned (circlesSpawned + squaresSpawned)
+		<declaration>int turretsPlaced  = 0;      // Track the number of turrets that have been placed
+int circlesSpawned = 0;      // Track the number of circles that have been spawned
+int squaresSpawned = 0;      // Track the number of squares that have been spawned
+int enemiesSpawned = 0;      // Track the number of enemies that have been spawned (circlesSpawned + squaresSpawned)
 
-clock circleSpawnTimer;      //Track circle spawn time
-clock squareSpawnTimer;      //Track square spawn time
+clock circleSpawnTimer;      // Track circle spawn time
+clock squareSpawnTimer;      // Track square spawn time
 
 
-//Place a turret and setup the related global variables
+// Place a turret and setup the related global variables
 void placeTurret() {
     TurretType type = TURRETS_CONFIGUTATIONS[SELECTED_CONFIGURATION].turretsType[turretsPlaced];
     
@@ -264,7 +273,8 @@ void placeTurret() {
     turretsPlaced++;
 }
 
-//Spawn an enemy and setup the related global variables
+// Spawn an enemy and setup the related global variables
+// @param type    The type of enemy to spawn
 void spawnEnemy(EnemyType type) {
     enemies[enemiesSpawned].active = true;
     enemies[enemiesSpawned].type   = type;
@@ -458,20 +468,20 @@ squareSpawnTimer==SQUARE_SPAWN_TIME</label>
 	<template>
 		<name>EnemyTemplate</name>
 		<parameter>int enemyId</parameter>
-		<declaration>//Variables related to an enemy instance
-int segment = 0;                      //Track in which segment of the path the enemy is
-int step = 0;                         //Track in which cell of the segment the enemy is
+		<declaration>// Variables related to an enemy instance
+int segment = 0;                      // Track in which segment of the path the enemy is
+int step = 0;                         // Track in which cell of the segment the enemy is
 
-clock moveTimer;                      //Track enemy movement time
-clock spawnTimer;                     //Used to check queries
+clock moveTimer;                      // Track enemy movement time
+clock spawnTimer;                     // Used to check queries
 
-int numTurretsToAwaken;               //Track how many turrets need to be awakened
-int turretToAwaken;                   //Track which turret will be awakened now
-bool turretsToAwaken[MAX_TURRETS];    //Track which turrets need to be awakened
+int numTurretsToAwaken;               // Track how many turrets need to be awakened
+int turretToAwaken;                   // Track which turret will be awakened now
+bool turretsToAwaken[MAX_TURRETS];    // Track which turrets need to be awakened
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//GETTER FUNCTIONS
+// GETTER FUNCTIONS
 
 Coordinate pos() {
     return enemies[enemyId].pos;
@@ -487,20 +497,22 @@ int health() {
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//HELPER FUNCTIONS
+// HELPER FUNCTIONS
 
+// Function to initialize enemy timers
 void initEnemy() {
     moveTimer = 0;
     spawnTimer = 0;
 }
 
-//Function to update position and change path if needed
+// Function to update position and change path if needed
+// @param i    Used to select which segment to follow
 void move(int i) {
     if (step &lt; SEGMENTS_LEN[segment] - 1) {
         step++;
     }
     else if (!isMainTower(pos())) {
-        segment = 2 * (segment + 1) - i;    //Binary trees formula based on the order of the children
+        segment = 2 * (segment + 1) - i;    // Binary trees formula based on the order of the children
         step = 0;
     }
 
@@ -509,14 +521,14 @@ void move(int i) {
     moveTimer = 0;
 }
 
-//Function to attack main tower
+// Function to attack main tower
 void attack() {
     if (!enemies[enemyId].active) return;
 
     mainTowerLife -= enemies[enemyId].damage;
 }
 
-//Function to set the enemy as inactive
+// Function to set the enemy as inactive
 void deactive() {
     if (!enemies[enemyId].active) return;
 
@@ -524,7 +536,7 @@ void deactive() {
     activeEnemies--;
 }
 
-//Function to check if some turret need to shoot me
+// Function to check if some turret need to shoot me
 void findTurretsToAwaken() {
     int t;
     
@@ -539,7 +551,7 @@ void findTurretsToAwaken() {
     }
 }
 
-//Function to select the turret that need to be awakened
+// Function to select the turret that need to be awakened
 void selectTurretToAwaken() {
     int t;
     
@@ -668,12 +680,12 @@ findTurretsToAwaken()</label>
 	<template>
 		<name>TurretTemplate</name>
 		<parameter>int turretId</parameter>
-		<declaration>//Variables related to a turret instance
-clock fireTimer;    //Track turret fire time
+		<declaration>// Variables related to a turret instance
+clock fireTimer;    // Track turret fire time
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//GETTER FUNCTIONS
+// GETTER FUNCTIONS
 
 int fireSpeed() {
     return turrets[turretId].fireSpeed;
@@ -681,9 +693,10 @@ int fireSpeed() {
 
 
 /*----------------------------------------------------------------------------------------------------*/
-//HELPER FUNCTIONS
+// HELPER FUNCTIONS
 
-//Function which applies damage from a turret to the enemy instance
+// Function which applies damage from a turret to the enemy instance
+// @param enemyId    The ID of the enemy that is being shot
 void shoot(int enemyId) {
     turrets[turretId].ready = false;
     enemies[enemyId].health -= turrets[turretId].damage;
@@ -696,7 +709,7 @@ void shoot(int enemyId) {
     fireTimer = 0;
 }
 
-//Function used to check if there is an enemy in the range
+// Function used to check if there is an enemy in the range
 void checkEnemy() {
     int targetId = findTarget(turretId);
     
@@ -783,16 +796,16 @@ EnemyProcess(const enemyId_t id) = EnemyTemplate(id);
 typedef int[0, (NUM_TURRETS - 1) &gt;? 0] turretId_t;
 TurretProcess(const turretId_t id) = TurretTemplate(id);
 
-//NO TURRETS VERSION - set SELECTED_CONFIGURATION to 0 in Declarations
-//system ControllerProcess, EnemyProcess;
+// NO TURRETS VERSION - set SELECTED_CONFIGURATION to 0 in Declarations
+// system ControllerProcess, EnemyProcess;
 
-//WITH TURRETS VERSION - set SELECTED_CONFIGURATION to 1/2/3 in Declarations
+// WITH TURRETS VERSION - set SELECTED_CONFIGURATION to 1/2/3 in Declarations
 system ControllerProcess, EnemyProcess, TurretProcess;</system>
 	<queries>
 		<option key="--diagnostic" value="1"/>
 		<query>
 			<formula>simulate [&lt;=200] {mainTowerLife}</formula>
-			<comment>Query I</comment>
+			<comment>(Property I) Simulate the system for a maximum timeout of 200 time units and estimate how long the Main Tower remains undamaged in the configuration provided in the query (VI) in the previous section.</comment>
 			<result outcome="success" type="quality" timestamp="2025-05-30 15:08:32 +0200">
 				<option key="--diagnostic" value="1"/>
 				<plot title="Simulations (1)" xaxis="time" yaxis="value">
@@ -875,7 +888,7 @@ system ControllerProcess, EnemyProcess, TurretProcess;</system>
 		</query>
 		<query>
 			<formula>Pr[&lt;=200] ([] mainTowerLife &gt; 0)</formula>
-			<comment>Query II, Query III</comment>
+			<comment>(Properties II / III) Determine the probability that, for a maximum timeout of 200 time units, the Main Tower survives in the configuration provided in the query (VI) in the previous section.</comment>
 			<result outcome="success" type="interval" value="≤ 0.0499441 (95% CI)" timestamp="2025-05-30 15:10:24 +0200">
 				<option key="--diagnostic" value="1"/>
 				<details>≤ 0.0499441 (95% CI)</details>
