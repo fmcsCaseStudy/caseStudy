@@ -29,7 +29,7 @@ caseStudy/
 │   ├── TowerDefenseStochasticVersion.xml           # Stochastic Version XML File
 ├── Vanilla_Version                                 
 │   ├── Backup Files/                               # older models which were optimized later
-│   ├── TowerDefenseVanillaVersion(Final).xml       # Vanilla Version XML File
+│   ├── TowerDefenseVanillaVersion.xml              # Vanilla Version XML File
 ```
 
 ## 🎭 Contributors
